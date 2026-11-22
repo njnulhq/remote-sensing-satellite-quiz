@@ -1,0 +1,3387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>轨道课堂 · 遥感卫星闯关</title>
+<style>
+:root{
+  --bg:#040a15; --bg2:#081428; --panel:#0b1a2e; --panel2:#102441;
+  --line:#1c3a5e; --line2:#2a5787;
+  --txt:#e8f3ff; --dim:#93b0cc; --dim2:#5d7d9c;
+  --cyan:#35e0d1; --blue:#4a9eff; --amber:#ffb454; --red:#ff6b6b;
+  --green:#5be08a; --violet:#a78bfa; --gold:#ffd166;
+  --font:"Noto Sans SC","PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","Consolas","SFMono-Regular",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font); color:var(--txt); background:var(--bg);
+  overflow:hidden; -webkit-tap-highlight-color:transparent;
+  background-image:
+    radial-gradient(1200px 700px at 15% -10%, rgba(53,224,209,.10), transparent 60%),
+    radial-gradient(1000px 600px at 90% 0%, rgba(74,158,255,.12), transparent 55%),
+    radial-gradient(900px 700px at 50% 110%, rgba(255,180,84,.07), transparent 60%);
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; opacity:.55;
+  background-image:radial-gradient(1.5px 1.5px at 20px 30px, rgba(255,255,255,.35), transparent),
+    radial-gradient(1px 1px at 140px 90px, rgba(255,255,255,.3), transparent),
+    radial-gradient(1.2px 1.2px at 260px 180px, rgba(255,255,255,.25), transparent),
+    radial-gradient(1px 1px at 340px 60px, rgba(255,255,255,.2), transparent);
+  background-size:380px 240px;
+}
+#app{position:relative;height:100%;display:flex;flex-direction:column;z-index:1}
+.topbar{
+  flex:0 0 auto; display:flex; align-items:center; gap:14px;
+  padding:10px clamp(14px,2vw,26px);
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(10,26,46,.95), rgba(6,16,30,.75));
+  backdrop-filter:blur(8px);
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px;font-size:clamp(15px,1.35vw,20px);white-space:nowrap}
+.logo{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 210deg,#35e0d1,#4a9eff,#a78bfa,#35e0d1);position:relative;box-shadow:0 0 18px rgba(74,158,255,.45)}
+.logo::after{content:"";position:absolute;inset:4px;border-radius:6px;background:#061224;border:1px solid rgba(255,255,255,.14)}
+.logo span{position:absolute;inset:0;display:grid;place-items:center;font-size:15px;z-index:2}
+.rank{
+  font-size:12px; padding:5px 12px; border-radius:999px; white-space:nowrap;
+  border:1px solid rgba(53,224,209,.4); color:var(--cyan);
+  background:rgba(53,224,209,.08); box-shadow:0 0 14px rgba(53,224,209,.15) inset;
+}
+.top-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  font-family:var(--font); font-size:13px; color:var(--txt); cursor:pointer;
+  border:1px solid var(--line2); background:linear-gradient(180deg,#12283f,#0b1a2e);
+  padding:8px 14px; border-radius:10px; transition:.18s; white-space:nowrap;
+}
+.btn:hover{border-color:var(--cyan); color:var(--cyan); transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:linear-gradient(135deg,#1b6fd6,#0f9ea8); border-color:transparent; color:#fff; font-weight:700; box-shadow:0 6px 18px rgba(27,111,214,.3)}
+.btn.primary:hover{filter:brightness(1.12); color:#fff}
+.btn.ghost{background:transparent}
+.btn.small{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn.warn{border-color:rgba(255,107,107,.5);color:#ffb3b3}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+main{flex:1 1 auto;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow:auto;padding:clamp(12px,2vw,26px);display:none}
+.screen.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.wrap{max-width:1240px;margin:0 auto}
+.h1{font-size:clamp(20px,2.2vw,30px);font-weight:800;letter-spacing:.5px}
+.h2{font-size:clamp(15px,1.35vw,19px);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.h2::before{content:"";width:4px;height:16px;border-radius:2px;background:linear-gradient(180deg,var(--cyan),var(--blue))}
+.sub{color:var(--dim);font-size:13px;line-height:1.7}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line2);color:var(--dim)}
+.pill.on{color:var(--cyan);border-color:rgba(53,224,209,.45);background:rgba(53,224,209,.07)}
+.hidden{display:none!important}
+
+/* ---------- 首页 ---------- */
+.hero{display:flex;gap:20px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin:6px 0 18px}
+.hero .sub{max-width:700px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:linear-gradient(180deg,rgba(18,40,63,.85),rgba(8,20,37,.85));border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:96px}
+.stat b{display:block;font-size:22px;font-family:var(--mono);color:var(--cyan);line-height:1.2}
+.stat span{font-size:11px;color:var(--dim2);letter-spacing:.5px}
+.levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.lvcard{
+  position:relative;overflow:hidden;border:1px solid var(--line);border-radius:16px;padding:16px;
+  background:linear-gradient(155deg,rgba(16,36,65,.9),rgba(6,16,30,.92));
+  cursor:pointer;transition:.2s;min-height:168px;display:flex;flex-direction:column;gap:8px;
+}
+.lvcard:hover{transform:translateY(-3px);border-color:rgba(53,224,209,.45);box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.lvcard .no{font-family:var(--mono);font-size:12px;color:var(--dim2);letter-spacing:2px}
+.lvcard .tt{font-size:17px;font-weight:800}
+.lvcard .ds{font-size:12.5px;color:var(--dim);line-height:1.65;flex:1}
+.lvcard .ft{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim2);border-top:1px dashed var(--line);padding-top:8px}
+.lvcard .ft .rk{color:var(--cyan)}
+.lvcard::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(53,224,209,.16),transparent 70%)}
+.lvcard.locked{filter:saturate(.4);opacity:.62}
+.lvcard .badge-done{position:absolute;top:12px;right:12px;font-size:11px;color:#0a1a12;background:var(--green);border-radius:999px;padding:2px 8px;font-weight:700}
+.lvcard .lock{position:absolute;top:12px;right:12px;font-size:12px;color:var(--amber);border:1px solid rgba(255,180,84,.4);border-radius:999px;padding:2px 8px}
+
+/* ---------- 通用关卡头 ---------- */
+.lvhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.lvtitle{font-size:clamp(16px,1.6vw,22px);font-weight:800}
+.back{font-size:12px;color:var(--dim);cursor:pointer;border:1px solid var(--line);padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.02)}
+.back:hover{color:var(--cyan);border-color:var(--cyan)}
+.meter{display:flex;gap:6px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line2)}
+.dot.on{background:var(--cyan);box-shadow:0 0 10px rgba(53,224,209,.6)}
+.heart{color:var(--red);font-size:15px;letter-spacing:2px}
+.hudline{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--dim);flex-wrap:wrap}
+.hudline b{color:var(--txt);font-family:var(--mono)}
+
+/* ---------- 第 1 关 ---------- */
+#mGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:clamp(6px,1vw,12px);margin:10px 0 16px}
+.mcard{aspect-ratio:3/3.8;perspective:1000px;cursor:pointer;min-height:0;max-width:150px;width:100%;justify-self:center}
+.mcard-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .48s cubic-bezier(.25,.8,.3,1)}
+.mcard.flip .mcard-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:12px;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;text-align:center;border:1px solid var(--line2);overflow:hidden}
+.face.front{background:linear-gradient(150deg,#153154,#0a1a2e);box-shadow:inset 0 0 24px rgba(74,158,255,.12)}
+.face.front .q{font-size:clamp(18px,2vw,26px);color:rgba(53,224,209,.55);font-weight:900}
+.face.front .tip{font-size:10px;color:var(--dim2);margin-top:6px;letter-spacing:1px}
+.face.front::before{content:"";position:absolute;inset:6px;border:1px dashed rgba(53,224,209,.18);border-radius:8px}
+.face.back{transform:rotateY(180deg);background:linear-gradient(160deg,#0e2340,#0a1626);justify-content:flex-start;gap:4px}
+.face.back.name{border-color:rgba(53,224,209,.45);background:linear-gradient(160deg,#103a49,#0a1c2c)}
+.face.back .nm{font-size:clamp(12px,1.15vw,15px);font-weight:800;line-height:1.25;color:#fff}
+.face.back .cn{font-size:9px;color:var(--amber);border:1px solid rgba(255,180,84,.35);padding:1px 5px;border-radius:4px}
+.face.back .dt{font-size:clamp(9px,.85vw,11.5px);line-height:1.45;color:#c6dcf0;word-break:break-word}
+.mcard.matched .face{opacity:.42;border-color:rgba(91,224,138,.5)}
+.mcard.matched{pointer-events:none}
+.mcard.matched .face.front{background:linear-gradient(150deg,#123a2c,#0a1a18)}
+.mcard.wrong .mcard-inner{animation:shake .35s}
+@keyframes shake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-6px)}75%{transform:rotateY(180deg) translateX(6px)}}
+.l1bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:4px 0}
+.streakbox{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--dim)}
+.bulb{width:14px;height:14px;border-radius:50%;border:1px solid var(--line2)}
+.bulb.on{background:var(--green);border-color:var(--green);box-shadow:0 0 10px rgba(91,224,138,.5)}
+
+/* ---------- 第 2 关 ---------- */
+#arena{position:relative;height:min(62vh,560px);min-height:380px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:
+  linear-gradient(180deg,rgba(10,26,46,.9),rgba(4,10,21,.95)),
+  repeating-linear-gradient(90deg,transparent 0 59px,rgba(74,158,255,.05) 59px 60px),
+  repeating-linear-gradient(0deg,transparent 0 59px,rgba(74,158,255,.05) 59px 60px)}
+#fallLayer{position:absolute;inset:0}
+.fallcard{
+  position:absolute;padding:8px 10px;border-radius:10px;background:linear-gradient(160deg,#14375c,#0a1c30);
+  border:1px solid rgba(74,158,255,.5);font-size:clamp(11px,1vw,14px);font-weight:700;
+  box-shadow:0 8px 20px rgba(0,0,0,.4), inset 0 0 16px rgba(74,158,255,.12);
+  cursor:grab;touch-action:none;user-select:none;text-align:center;line-height:1.3;max-width:150px;
+}
+.fallcard.drag{cursor:grabbing;transform:scale(1.06);border-color:var(--cyan);box-shadow:0 0 22px rgba(53,224,209,.45);z-index:9}
+#bins{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px;background:linear-gradient(0deg,rgba(4,10,21,.96),rgba(4,10,21,.6))}
+.bin{
+  border:1px solid var(--line2);border-radius:12px;padding:8px 6px;text-align:center;
+  background:linear-gradient(180deg,rgba(18,40,63,.7),rgba(8,20,37,.9));transition:.15s;min-height:64px;
+  display:flex;flex-direction:column;justify-content:center;gap:2px;
+}
+.bin .t{font-size:clamp(11px,1.05vw,14px);font-weight:800;color:#fff}
+.bin .r{font-size:10px;color:var(--dim2)}
+.bin.hot{border-color:var(--cyan);background:rgba(53,224,209,.14);transform:translateY(-3px)}
+.bin.ok{border-color:var(--green);background:rgba(91,224,138,.18)}
+.bin.bad{border-color:var(--red);background:rgba(255,107,107,.18)}
+
+/* ---------- 第 3 关 ---------- */
+.quizcard{max-width:900px;margin:0 auto;border:1px solid var(--line);border-radius:16px;padding:clamp(14px,2vw,24px);background:linear-gradient(160deg,rgba(16,36,65,.9),rgba(6,16,30,.94))}
+.qtop{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--dim);margin-bottom:8px}
+.qtext{font-size:clamp(15px,1.5vw,20px);font-weight:700;line-height:1.55;margin:6px 0 16px}
+.opts{display:grid;gap:10px}
+.opt{
+  text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);
+  background:rgba(255,255,255,.03);color:var(--txt);font-size:clamp(13px,1.2vw,15px);cursor:pointer;transition:.15s;
+  display:flex;gap:10px;align-items:flex-start;font-family:var(--font);line-height:1.5;
+}
+.opt:hover{border-color:var(--cyan);background:rgba(53,224,209,.08)}
+.opt .k{font-family:var(--mono);font-weight:800;color:var(--cyan);flex:0 0 auto}
+.opt.right{border-color:var(--green);background:rgba(91,224,138,.16)}
+.opt.wrong{border-color:var(--red);background:rgba(255,107,107,.16)}
+.opt.dim{opacity:.55}
+.explain{margin-top:14px;padding:12px 14px;border-radius:12px;border-left:3px solid var(--cyan);background:rgba(53,224,209,.07);font-size:13px;line-height:1.7;color:#cfe6f5}
+.explain.bad{border-left-color:var(--red);background:rgba(255,107,107,.08)}
+.achievement{margin-top:10px;padding:10px 12px;border-radius:10px;background:linear-gradient(90deg,rgba(255,209,102,.14),rgba(255,180,84,.04));border:1px solid rgba(255,209,102,.35);font-size:12.5px;color:#ffe2a8;line-height:1.6}
+
+/* ---------- 第 4 关 ---------- */
+#linkBoard{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,8vw,140px);margin:10px 0}
+.col{display:grid;gap:10px}
+.node{
+  border:1px solid var(--line2);border-radius:12px;padding:10px 12px;background:linear-gradient(160deg,rgba(18,40,63,.85),rgba(8,20,37,.9));
+  font-size:clamp(11.5px,1.1vw,14px);line-height:1.5;cursor:pointer;transition:.15s;position:relative;z-index:2;
+}
+.node:hover{border-color:var(--cyan)}
+.node.sel{border-color:var(--cyan);box-shadow:0 0 18px rgba(53,224,209,.35);background:rgba(53,224,209,.1)}
+.node.lock{border-color:rgba(91,224,138,.5);background:rgba(91,224,138,.08);cursor:default;color:#c9f3d8}
+.node.err{border-color:var(--red);animation:shake2 .3s}
+@keyframes shake2{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#linkSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.l4foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
+
+/* ---------- 第 5/6 关 ---------- */
+.stagewrap{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#050d18;height:min(70vh,620px)}
+.stagewrap canvas{display:block;width:100%;height:100%}
+.overlaybar{position:absolute;left:0;right:0;top:0;padding:10px 14px;display:flex;gap:10px;align-items:center;pointer-events:none}
+.obar{flex:1;height:8px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden;position:relative}
+.obar .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#35e0d1,#4a9eff);box-shadow:0 0 14px rgba(53,224,209,.6);transition:width .2s}
+.obar .gate{position:absolute;top:-3px;width:3px;height:14px;background:var(--amber)}
+.hudpill{font-family:var(--mono);font-size:12px;background:rgba(4,10,21,.7);border:1px solid var(--line);padding:3px 9px;border-radius:999px;color:#cfe6f5}
+.itemslot{position:absolute;right:14px;top:44px;display:flex;gap:8px}
+.itemBtn{
+  pointer-events:auto;border:1px solid rgba(255,209,102,.45);background:rgba(255,209,102,.1);color:#ffe2a8;
+  border-radius:10px;padding:7px 11px;font-size:12px;cursor:pointer;font-family:var(--font);
+}
+.itemBtn:disabled{opacity:.35;cursor:not-allowed}
+.selectpane{position:absolute;inset:0;background:radial-gradient(700px 500px at 50% 40%,rgba(10,26,46,.9),rgba(3,8,16,.96));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:20}
+.selectpane h3{font-size:clamp(16px,1.7vw,22px)}
+.cars{display:flex;gap:clamp(10px,2vw,26px);flex-wrap:wrap;justify-content:center}
+.carbox{cursor:pointer;border:1px solid var(--line);border-radius:16px;padding:10px 12px 8px;background:linear-gradient(180deg,rgba(18,40,63,.6),rgba(6,14,26,.9));transition:.18s;text-align:center;width:180px}
+.carbox:hover,.carbox.sel{border-color:var(--cyan);box-shadow:0 0 26px rgba(53,224,209,.25);transform:translateY(-3px)}
+.carbox canvas{width:160px;height:86px}
+.carbox.herobox canvas{width:122px;height:122px}
+.carbox.herobox{width:150px}
+.carbox .cn{font-size:13px;font-weight:800;margin-top:2px}
+.carbox .cd{font-size:10.5px;color:var(--dim)}
+
+/* ---------- 计分 / 教程 / 手册 / 登录 ---------- */
+.scorepill{margin-left:6px;font-family:var(--mono);font-size:12px;border:1px solid rgba(255,209,102,.4);background:rgba(255,209,102,.08);color:#ffe2a8;border-radius:999px;padding:5px 12px;position:relative;white-space:nowrap}
+.scorepill b{color:#fff}
+.scorepill .sep{margin:0 6px;color:var(--dim2)}
+.floatdelta{position:absolute;right:10px;top:-16px;font-style:normal;font-weight:800;font-size:13px;animation:fd .95s ease forwards;pointer-events:none}
+.floatdelta.up{color:#7ff0a8}
+.floatdelta.down{color:#ff9b9b}
+@keyframes fd{0%{opacity:0;transform:translateY(6px)}25%{opacity:1}100%{opacity:0;transform:translateY(-16px)}}
+.helpbtn{padding:4px 9px!important;font-size:12px!important;border-radius:8px!important}
+.qtag{grid-column:1/-1;font-size:12px;color:var(--dim);background:rgba(74,158,255,.09);border:1px dashed rgba(74,158,255,.35);border-radius:9px;padding:6px 10px;margin-bottom:2px}
+.qtag.multi{color:#ffe2a8;background:rgba(255,209,102,.1);border-color:rgba(255,209,102,.4)}
+.qtag b{color:#fff}
+.opt{position:relative}
+.opt .ck{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#ffd166;font-weight:900;opacity:0;font-size:14px}
+.opt.sel{border-color:var(--amber)!important;background:rgba(255,209,102,.17)!important;box-shadow:0 0 0 1px rgba(255,209,102,.5) inset,0 6px 18px rgba(0,0,0,.25)}
+.opt.sel .ck{opacity:1}
+.opt.sel .k{color:#ffd166}
+.opt.sel .ct,.opt.sel span{color:#fff}
+.mantimer{display:flex;align-items:center;gap:10px;font-size:12px;color:#ffe2a8;margin-bottom:10px;font-family:var(--mono)}
+.manbar{flex:1;height:6px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}
+.manbar i{display:block;height:100%;background:linear-gradient(90deg,#ffd166,#ff8a65);transition:width .9s linear}
+.tut ul{margin:8px 0 0 18px;color:#cfe6f5}
+.tut li{margin:4px 0;line-height:1.7;font-size:13px}
+.tut .tutline{font-size:13.5px}
+.tutscore{margin-top:10px;padding:8px 10px;border-radius:9px;background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.35);color:#ffe2a8;font-size:12.5px}
+.introGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.introGrid h4{font-size:13px;color:var(--cyan);margin-bottom:6px}
+.introGrid ul{margin-left:16px;font-size:12.5px;line-height:1.8;color:#cfe6f5}
+.runtable{width:100%;border-collapse:collapse;font-size:12px}
+.runtable th{background:rgba(74,158,255,.14);padding:6px 8px;text-align:left;border-bottom:1px solid var(--line2)}
+.runtable td{padding:5px 8px;border-bottom:1px dashed rgba(42,87,135,.4);color:#c6dcf0}
+.runtable td.sc{color:#ffd166;font-weight:800;font-family:var(--mono)}
+.loginform{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.loginform label{font-size:12.5px;color:var(--dim);display:flex;flex-direction:column;gap:5px}
+.loginform input{font-family:var(--font);font-size:13px;padding:9px 11px;border-radius:9px;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:#fff;outline:none}
+.loginform input:focus{border-color:var(--cyan)}
+.pwwrap{position:relative;display:block}
+.pwwrap input{width:100%;padding-right:44px!important}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:30px;border:none;background:transparent;color:#9fc0dc;font-size:16px;cursor:pointer;border-radius:7px}
+.eye:hover{background:rgba(74,158,255,.16);color:#fff}
+.eye.on{color:#ffd166}
+.loginerr{color:#ff9b9b;font-size:12px;min-height:16px}
+.helpdoc{background:rgba(8,20,34,.72);border:1px solid var(--line2);border-radius:16px;padding:22px 26px;line-height:1.85}
+.helpdoc h2{font-size:17px;color:var(--cyan);margin:22px 0 8px;padding-left:10px;border-left:3px solid var(--cyan)}
+.helpdoc h2:first-child{margin-top:0}
+.helpdoc p{font-size:13.5px;color:#cfe3f6}
+.helpdoc ul{margin:6px 0 0 18px;font-size:13px;color:#cfe3f6}
+.helpdoc li{margin:5px 0}
+.helpdoc strong{color:#ffd166}
+.helpgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:10px}
+.helpcard{background:rgba(18,48,74,.6);border:1px solid rgba(74,158,255,.22);border-radius:12px;padding:12px 14px}
+.helpcard b{color:#8fd8ff;font-size:13px}
+.helpcard p{font-size:12.5px;margin-top:5px;color:#bcd6ea}
+.helplinks{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
+.helplinks .btn{text-decoration:none}
+.shakeit{animation:shake3 .3s}
+@keyframes shake3{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.drivepad{position:absolute;right:14px;bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;z-index:6}
+.driveBtn.rev{border-color:rgba(255,209,102,.5);color:#ffe2a8}
+.driveBtn.jump{border-color:rgba(168,140,255,.6);color:#ded3ff}
+.driveBtn{border:1px solid rgba(53,224,209,.5);background:rgba(4,12,22,.72);color:#bff7f0;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);user-select:none;-webkit-user-select:none}
+.driveBtn:active,.driveBtn.on{background:rgba(53,224,209,.24);color:#fff}
+.driveBtn.brake{border-color:rgba(255,107,107,.5);color:#ffc1c1}
+.driveBtn.brake:active,.driveBtn.brake.on{background:rgba(255,107,107,.24);color:#fff}
+.playpad{position:absolute;right:14px;bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;z-index:6}
+.ammo{position:absolute;right:14px;top:44px;font-family:var(--mono);font-size:12px;color:#ffe2a8;background:rgba(4,12,22,.72);border:1px solid rgba(255,209,102,.45);border-radius:999px;padding:4px 10px;z-index:6}
+/* ---------- 弹窗 / 提示 ---------- */
+.overlay{position:fixed;inset:0;background:rgba(2,6,12,.72);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:80}
+.modal{
+  width:min(920px,96vw);max-height:92vh;overflow:auto;border-radius:18px;border:1px solid var(--line2);
+  background:linear-gradient(165deg,#0f2543,#07121f);box-shadow:0 30px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08);
+  padding:clamp(16px,2.2vw,26px);animation:pop .22s ease;
+}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+.mhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.mtitle{font-size:clamp(16px,1.6vw,20px);font-weight:800}
+.mclose{margin-left:auto;cursor:pointer;color:var(--dim);border:1px solid var(--line);border-radius:8px;width:30px;height:30px;display:grid;place-items:center;background:transparent;font-size:16px}
+.mclose:hover{color:var(--red);border-color:var(--red)}
+.mbody{font-size:13.5px;line-height:1.75;color:#d6e8f7}
+.mactions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+#toasts{position:fixed;right:14px;top:70px;display:flex;flex-direction:column;gap:8px;z-index:120;pointer-events:none;width:min(320px,80vw)}
+.toast{background:linear-gradient(160deg,rgba(20,48,80,.96),rgba(8,20,37,.96));border:1px solid var(--line2);border-left:3px solid var(--cyan);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.55;animation:tin .25s ease;box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.toast.good{border-left-color:var(--green)}
+.toast.bad{border-left-color:var(--red)}
+.toast.gold{border-left-color:var(--gold)}
+@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+/* 手册表 */
+.manualtable{width:100%;border-collapse:collapse;font-size:11.5px}
+.manualtable th{background:rgba(74,158,255,.15);color:#cfe6f5;font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line2);text-align:left;white-space:nowrap}
+.manualtable td{padding:5px 8px;border-bottom:1px dashed rgba(42,87,135,.4);color:#c6dcf0;vertical-align:top}
+.manualtable tr:hover td{background:rgba(53,224,209,.06)}
+/* 教师面板 */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.note{font-size:12px;color:var(--dim2);line-height:1.7}
+.liblist{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;max-height:60vh;overflow:auto;padding-right:4px}
+.libitem{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.02)}
+.libitem .n{font-weight:800;font-size:13px;color:#fff}
+.libitem .d{font-size:11px;color:var(--dim);line-height:1.55;margin-top:3px}
+.libitem .a{font-size:11px;color:#ffe2a8;margin-top:4px}
+.libitem.unseen{opacity:.55}
+
+/* 结束页 */
+.finish{max-width:760px;margin:6vh auto;text-align:center}
+.finish .big{font-size:clamp(24px,3vw,40px);font-weight:900;letter-spacing:1px;background:linear-gradient(90deg,#35e0d1,#4a9eff,#ffd166);-webkit-background-clip:text;background-clip:text;color:transparent}
+.finish .medal{font-size:56px;margin:10px 0}
+.finish p{color:var(--dim);line-height:1.9;font-size:14px;margin-top:14px}
+
+@media (max-width:760px){
+  #mGrid{grid-template-columns:repeat(4,1fr)}
+  .levels{grid-template-columns:1fr}
+  #linkBoard{gap:16px}
+  .topbar{gap:8px}
+  .brand{font-size:14px}
+  .rank{display:none}
+  .carbox{width:44%}
+  .carbox canvas{width:100%;height:72px}
+}
+@media (max-width:520px){
+  #mGrid{grid-template-columns:repeat(4,1fr);gap:6px}
+  .face.back .dt{font-size:9px}
+  .top-actions .btn{padding:6px 9px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo"><span>🛰</span></div>轨道课堂 · 遥感卫星闯关</div>
+    <div class="rank" id="rankBadge">见习观察员</div>
+    <div class="scorepill" id="scorePill">本关 <b>0</b> 分<span class="sep">·</span>累计 <b>0</b></div>
+    <div class="top-actions">
+      <button class="btn small" id="btnLib">卫星库</button>
+      <button class="btn small" id="btnHelp">帮助</button>
+      <button class="btn small" id="btnReview">复习舱</button>
+      <button class="btn small ghost" id="btnTeacher">教师模式</button>
+      <button class="btn small ghost" id="btnReset">重置</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== 首页 ===== -->
+    <section class="screen active" id="home">
+      <div class="wrap">
+        <div class="hero">
+          <div>
+            <div class="h1">从一颗卫星，到一套方案</div>
+            <p class="sub">六关闯到底：认星 → 分档 → 懂轨道 → 读波段 → 会选星 → 能出方案。题库每局随机，错了进复习舱，段位随通关晋升。</p>
+          </div>
+          <div class="stats">
+            <div class="stat"><b id="stTotal">0</b><span>累计总分</span></div>
+            <div class="stat"><b id="stPlays">0</b><span>闯关次数</span></div>
+            <div class="stat"><b id="stBest">0</b><span>最高单次</span></div>
+            <div class="stat"><b id="stSeen">0</b><span>已见卫星</span></div>
+            <div class="stat"><b id="stWrong">0</b><span>待复习</span></div>
+            <div class="stat"><b id="stDone">0</b><span>已通关</span></div>
+          </div>
+        </div>
+        <div class="levels" id="levelGrid"></div>
+        <div class="h2" style="margin-top:18px">成绩记录</div>
+        <div id="runList"></div>
+        <p class="note" style="margin-top:12px">提示：进度和总分保存在本机浏览器。课堂登记以首页「累计总分」为准，换电脑或清缓存会清零。</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+          <button class="btn primary" id="btnHelpHome">📖 使用说明 · 网站介绍</button>
+          <a class="btn" href="全球对地观测卫星与传感器参数总表.xlsx" target="_blank" rel="noopener">📊 全球对地观测卫星与传感器参数总表</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 使用说明 / 网站介绍 ===== -->
+    <section class="screen" id="help">
+      <div class="wrap">
+        <div class="lvhead">
+          <button class="back" data-home>← 返回首页</button>
+          <div class="lvtitle">使用说明 · 关于这个闯关</div>
+        </div>
+        <div class="helpdoc">
+          <h2>这是什么</h2>
+          <p>这是《航天遥感数据获取》课程的配套闯关练习。整站是一个离线网页：不联网也能玩，进度和成绩存在本机浏览器里。六关按“认星 → 分档 → 懂轨道 → 读波段 → 会选星 → 能出方案”的顺序设计，覆盖课程里最常考、也最容易混的几类知识点。</p>
+
+          <h2>六关对应哪些知识点</h2>
+          <div class="helpgrid">
+            <div class="helpcard"><b>第 1 关 · 认星台</b><p>卫星名与关键参数配对：分辨率、幅宽、重访、波段、发射国。适合课前熟悉“哪颗星是干什么的”。</p></div>
+            <div class="helpcard"><b>第 2 关 · 分辨率分拣</b><p>把卫星按亚米、米级、十米、百米、千米分档，建立“分辨率数量级”的直觉。</p></div>
+            <div class="helpcard"><b>第 3 关 · 轨道与重访</b><p>回归周期、幅宽、侧摆、组网与重访时间的关系，练的是“算一遍就懂”的推理。</p></div>
+            <div class="helpcard"><b>第 4 关 · 波段连连看</b><p>可见光、近红外、热红外、微波、微光各自能看什么：水体、植被、云雪、城市热岛、夜间灯光。</p></div>
+            <div class="helpcard"><b>第 5 关 · 赛车竞速</b><p>把选星决策放进限时场景：先判断任务最硬的约束，再组合数据源；顺带练手速与专注。</p></div>
+            <div class="helpcard"><b>第 6 关 · 马里奥闯关</b><p>综合应用：在跑图过程中不断被问“这片湖、这座城、这条流域该用哪几颗星”，最后完成平天湖综合方案。</p></div>
+          </div>
+
+          <h2>计分与课堂使用</h2>
+          <ul>
+            <li>每关答对加分、答错扣分，<strong>分数允许为负</strong>，就是为了把认真做和随便点的同学拉开。</li>
+            <li>每关有生命或错误次数上限，用尽后自动结算并进入下一关，不会卡住。</li>
+            <li>每次进关都会在首页「成绩记录」里留一条：什么时间、哪一关、多少分。</li>
+            <li>首页「累计总分」是本机所有闯关的总和，可作为平时分依据（建议取总分前三或达线加分）。</li>
+            <li>教师模式可跳关、看全部答案解析、清空错题与成绩，口令只告诉任课教师。</li>
+          </ul>
+
+          <h2>想学得更全：全球对地观测卫星与传感器参数总表</h2>
+          <p>闯关只挑了课程最核心的卫星，真正的“家底”在参数总表里：7 张工作表、近 600 行，按国别/机构、轨道类型、分辨率、波段、幅宽、重访等维度整理，还包含国产与国外主流对地观测卫星和传感器。做题卡住时，可以按卫星名去表里查它的真实参数；写课程作业、做大创或论文选题时，也可以直接拿它做选星依据。</p>
+          <div class="helplinks">
+            <a class="btn primary" href="全球对地观测卫星与传感器参数总表.xlsx" target="_blank" rel="noopener">📊 打开参数总表（本地 Excel）</a>
+            <a class="btn" href="https://my.feishu.cn/sheets/VU1EsXM6IhrxeMtIQIYcXmdOn3g" target="_blank" rel="noopener">☁ 在线版参数总表（飞书）</a>
+            <button class="btn" id="btnLib2">🛰 站内卫星库（闯关用简表）</button>
+          </div>
+          <p class="note">本地 Excel 需要和本网页放在同一个文件夹里；在线版需要联网并登录飞书。</p>
+
+          <h2>常见问题</h2>
+          <ul>
+            <li><b>换电脑后成绩没了？</b>成绩存在浏览器本地，换机器或清缓存会清零。重要成绩请在首页抄到登记表，或用教师模式的成绩单。</li>
+            <li><b>页面打不开或按键没反应？</b>请用 Chrome / Edge 打开，并点一下页面空白处让网页获得键盘焦点。</li>
+            <li><b>可以重复刷分吗？</b>可以，每次进关都单独记一条；课堂统计建议看「累计总分」，或规定只取某一关的最高分。</li>
+            <li><b>想改题目或加分值？</b>题库就在网页源码里，教师模式也可导出成绩；需要改题可联系任课教师。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 第 1 关 ===== -->
+    <section class="screen" id="lv1">
+      <div class="wrap">
+        <div class="lvhead">
+          <button class="back" data-home>← 返回</button>
+          <div class="lvtitle">第 1 关 · 认星台 | 记忆翻卡</div>
+          <div class="hudline" style="margin-left:auto">
+            <span>本轮 <b id="l1pairs">8</b> 对</span>
+            <div class="streakbox">连续通关 <span class="bulb" id="s1"></span><span class="bulb" id="s2"></span></div>
+          </div>
+        </div>
+        <div class="l1bar">
+          <span class="pill" id="l1round">第 1 / 2 轮</span>
+          <span class="pill on" id="l1pool">核心池</span>
+          <button class="btn small" id="l1manual">📖 查阅手册 ×2</button>
+          <span class="pill" id="l1manTimer" style="display:none;cursor:pointer"></span>
+          <span class="sub" id="l1hint">翻开两张卡，把卫星名和它的参数配成一对。</span>
+        </div>
+        <div id="mGrid"></div>
+      </div>
+    </section>
+
+    <!-- ===== 第 2 关 ===== -->
+    <section class="screen" id="lv2">
+      <div class="wrap">
+        <div class="lvhead">
+          <button class="back" data-home>← 返回</button>
+          <div class="lvtitle">第 2 关 · 分辨率分拣站</div>
+          <div class="hudline" style="margin-left:auto">
+            <span>已分拣 <b id="l2ok">0</b>/15</span>
+            <span class="heart" id="l2life">❤❤❤</span>
+          </div>
+        </div>
+        <div id="arena">
+          <div id="fallLayer"></div>
+          <div id="bins"></div>
+        </div>
+        <div class="l1bar" style="margin-top:10px">
+          <span class="sub">按住卫星卡，拖到对应的分辨率箱子里。拖错扣 1 点生命；卡片掉出屏幕不算答错，会重新出现。</span>
+          <button class="btn small" id="l2manual">📖 查阅手册 ×1</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 第 3 关 ===== -->
+    <section class="screen" id="lv3">
+      <div class="wrap">
+        <div class="lvhead">
+          <button class="back" data-home>← 返回</button>
+          <div class="lvtitle">第 3 关 · 轨道与重访因果实验室</div>
+          <div class="hudline" style="margin-left:auto"><span>答对 <b id="l3ok">0</b>/8</span><span class="heart" id="l3life">❤❤❤</span></div>
+        </div>
+        <div id="l3area"></div>
+      </div>
+    </section>
+
+    <!-- ===== 第 4 关 ===== -->
+    <section class="screen" id="lv4">
+      <div class="wrap">
+        <div class="lvhead">
+          <button class="back" data-home>← 返回</button>
+          <div class="lvtitle">第 4 关 · 波段效应连连看</div>
+          <div class="hudline" style="margin-left:auto"><span>本轮 <b id="l4done">0</b>/6</span><span class="heart" id="l4streak">连续 0/2</span></div>
+        </div>
+        <div id="linkBoard"><svg id="linkSvg"></svg><div class="col" id="colL"></div><div class="col" id="colR"></div></div>
+        <div class="l4foot">
+          <span class="sub">点左边波段，再点右边现象，连对锁绿；连错自动弹回并给出解析。</span>
+          <button class="btn small" id="l4manual">📖 查阅手册 ×1</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 第 5 关 ===== -->
+    <section class="screen" id="lv5">
+      <div class="wrap">
+        <div class="lvhead">
+          <button class="back" data-home>← 返回</button>
+          <div class="lvtitle">第 5 关 · 赛车竞速 | 应用选星</div>
+          <div class="hudline" style="margin-left:auto"><span>检查站 <b id="l5cp">0</b>/6</span><span class="heart" id="l5life">❤❤❤</span><span class="hudpill" id="l5speed">0 km/h</span></div>
+        </div>
+        <div class="stagewrap" id="stage5">
+          <canvas id="cv5"></canvas>
+          <div class="overlaybar"><div class="obar"><div class="fill" id="l5fill"></div></div></div>
+          <div class="itemslot">
+            <button class="itemBtn" id="l5manual" disabled>📖 手册 ×2</button>
+            <button class="itemBtn" id="l5hint" disabled>💡 提示 ×0</button>
+          </div>
+          <div class="drivepad">
+            <button class="driveBtn rev" id="l5reverse">倒车 ◀</button>
+            <button class="driveBtn jump" id="l5jump">跳跃 ␣</button>
+            <button class="driveBtn" id="l5throttle">油门 ▲</button>
+            <button class="driveBtn brake" id="l5brake">刹车 ▼</button>
+          </div>
+          <div class="selectpane" id="carPane">
+            <h3>选择你的探测赛车</h3>
+            <p class="note">四款涂装对应四类国产载荷，选一台喜欢的出发。</p>
+            <div class="cars" id="carList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 第 6 关 ===== -->
+    <section class="screen" id="lv6">
+      <div class="wrap">
+        <div class="lvhead">
+          <button class="back" data-home>← 返回</button>
+          <div class="lvtitle">第 6 关 · 超级马里奥式闯关 | 综合方案</div>
+          <div class="hudline" style="margin-left:auto"><span>障碍 <b id="l6cp">0</b>/6</span><span class="heart" id="l6life">❤❤❤</span><span class="hudpill">空格跳（可连跳3次）· J 开枪</span></div>
+        </div>
+        <div class="stagewrap" id="stage6">
+          <canvas id="cv6"></canvas>
+          <div class="overlaybar"><div class="obar"><div class="fill" id="l6fill"></div></div></div>
+          <div class="ammo" id="l6ammo">🔫 子弹 0</div>
+          <div class="itemslot">
+            <button class="itemBtn" id="l6manual">📖 手册 ×2</button>
+            <button class="itemBtn" id="l6hint">💡 提示 ×1</button>
+          </div>
+          <div class="playpad">
+            <button class="driveBtn rev" id="l6left">后退 ◀</button>
+            <button class="driveBtn" id="l6right">前进 ▶</button>
+            <button class="driveBtn jump" id="l6jump">跳跃 ▲</button>
+            <button class="driveBtn" id="l6shoot">开枪 ✦</button>
+          </div>
+          <div class="selectpane" id="heroPane">
+            <h3>选择你的调度员</h3>
+            <p class="note">四个形象都是同一套动作，选顺眼的即可。</p>
+            <div class="cars" id="heroList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toasts"></div>
+  <div class="overlay hidden" id="overlay"><div class="modal" id="modalBox"></div></div>
+</div>
+<script>
+
+/* ============================================================
+   数据 · 第 1 关：认星台卡池（54 对，core=核心必学 / ext=扩展选学）
+   字段 n=卫星名 d=匹配详情 a=国产成就 t=1核心/0扩展 c=1国产
+   ============================================================ */
+const L1_PAIRS=[
+/* ---- 核心必学 ---- */
+{n:"Landsat-5",d:"TM｜美国 USGS｜太阳同步｜30 m｜16 天｜1984 年发射，2013 年退役，最长寿的 Landsat",t:1},
+{n:"Landsat-7",d:"ETM+｜美国｜太阳同步｜15/30 m｜16 天｜1999 年发射，2003 年后条带失效仍在役",t:1},
+{n:"Landsat-8",d:"OLI+TIRS｜美国｜太阳同步｜30/100 m｜16 天｜2013 年，OLI 9 波段，新增海岸蓝与卷云",t:1},
+{n:"Landsat-9",d:"OLI-2+TIRS-2｜美国｜太阳同步｜30/100 m｜16 天｜2021 年，与 L8 组网联合重访 8 天",t:1},
+{n:"Terra",d:"MODIS｜美国 NASA｜太阳同步上午星｜250—1000 m｜1—2 天｜1999 年，36 波段全球综合观测",t:1},
+{n:"Aqua",d:"MODIS｜美国 NASA｜太阳同步下午星｜250—1000 m｜1—2 天｜2002 年，侧重水循环与降水",t:1},
+{n:"Sentinel-1A",d:"C-SAR｜欧洲 ESA｜太阳同步｜10 m｜12 天｜2014 年，全天候雷达，数据免费开放",t:1},
+{n:"Sentinel-2A",d:"MSI｜欧洲 ESA｜太阳同步｜10/20/60 m｜10 天｜2015 年，13 波段含红边，陆地主力",t:1},
+{n:"Sentinel-2B",d:"MSI｜欧洲 ESA｜太阳同步｜10/20/60 m｜10 天｜2017 年，与 2A 组网实现 5 天重访",t:1},
+{n:"Sentinel-3",d:"OLCI+SLSTR｜欧洲 ESA｜太阳同步｜300 m/1 km｜1—2 天｜2016 年，21 波段全球水色",t:1},
+{n:"Sentinel-5P",d:"TROPOMI｜欧洲 ESA｜太阳同步｜3.5×7 km｜1 天｜2017 年，NO₂/SO₂/CH₄ 痕量气体",t:1},
+{n:"NOAA-20",d:"VIIRS｜美国 NOAA｜太阳同步｜375 m/1 km｜1 天｜2017 年，接替 DMSP 的极轨气象",t:1},
+{n:"Himawari-8/9",d:"AHI｜日本 JMA｜GEO 静止｜0.5—2 km｜10 分钟全盘｜2014/2022 年，东亚台风监测主力",t:1},
+{n:"WorldView-3",d:"VNIR+SWIR｜美国 Maxar｜太阳同步｜0.31—3.7 m｜<1 天｜2014 年，商业，短波红外识别矿物",t:1},
+{n:"GOCI-II",d:"GK-2B｜韩国｜GEO 静止｜250 m｜1 小时｜2020 年，静止水色，盯赤潮与蓝藻",t:1},
+{n:"CBERS-4",d:"MUX/PAN｜中国—巴西｜太阳同步｜5/10/20 m｜26 天｜2014 年，中巴合作资源卫星",a:"中巴航天遥感合作典范，国产相机与巴西平台联合研制",t:1,c:1},
+{n:"CBERS-04A",d:"WPM｜中国—巴西｜太阳同步｜2/8 m｜31 天｜2019 年，中巴合作高分辨率业务星",a:"中巴合作升级版，2 m 分辨率服务两国国土调查",t:1,c:1},
+{n:"GF-1 高分一号",d:"PMS/WFV｜中国｜太阳同步｜2/8/16 m｜4 天｜2013 年，高分专项首发，宽幅普查",a:"我国首个 2 m 级民用光学卫星，实现国土大范围快速监测",t:1,c:1},
+{n:"GF-2 高分二号",d:"PMS｜中国｜太阳同步｜0.8/3.2 m｜5 天｜2014 年，国产亚米级光学遥感",a:"我国首颗民用亚米级光学卫星，打破国外亚米数据垄断",t:1,c:1},
+{n:"GF-3 高分三号",d:"C-SAR｜中国｜太阳同步｜1—500 m｜多模式｜2016 年，12 种成像模式全天候",a:"国内首颗多模式合成孔径雷达卫星，不受云雾黑夜限制",t:1,c:1},
+{n:"GF-4 高分四号",d:"面阵 CMOS｜中国｜GEO 静止 105.6°E｜50/400 m｜20 秒凝视｜2015 年，静止轨道光学",a:"我国第一颗静止轨道高分辨率对地观测卫星，快速监测台风洪水",t:1,c:1},
+{n:"GF-5 高分五号",d:"AHSI/VIM｜中国｜太阳同步｜30/40 m｜5 天｜2018 年，330 波段高光谱+大气探测",a:"国内首颗集陆地、大气综合观测的高光谱卫星",t:1,c:1},
+{n:"GF-6 高分六号",d:"WFV/PMS｜中国｜太阳同步｜2/8/16 m｜2 天｜2018 年，8 波段含红边、黄波段",a:"专门面向农业的卫星，红边波段助力农作物长势调查",t:1,c:1},
+{n:"GF-7 高分七号",d:"双线阵立体相机｜中国｜太阳同步｜0.65/2.6 m｜5 天｜2019 年，1:1 万立体测图",a:"我国首颗亚米级立体测绘卫星，实现高精度地形测绘自主可控",t:1,c:1},
+{n:"ZY-3 资源三号",d:"三线阵相机｜中国｜太阳同步｜2.1/5.8 m｜59 天｜2012 年，国产立体测图卫星",a:"实现我国 1:5 万比例尺立体测图自主化",t:1,c:1},
+{n:"ZY-1 02D 资源一号",d:"VNIC/AHSI｜中国｜太阳同步｜2 m/30 m、166 波段｜55 天｜2019 年，高光谱业务星",a:"我国首颗业务化高光谱遥感卫星，服务自然资源调查",t:1,c:1},
+{n:"HJ-2A/B 环境减灾二号",d:"CCD｜中国｜太阳同步｜16 m｜4 天｜2020 年，环境灾害连续监测",a:"接替环境一号，建成国产环境灾害监测业务星座",t:1,c:1},
+{n:"HY-1C 海洋一号C",d:"COCTS/CZI｜中国｜太阳同步｜50/1100 m｜1 天｜2018 年，海洋水色与海岸带",a:"我国自主海洋水色卫星，监测近海赤潮与悬浮泥沙",t:1,c:1},
+{n:"HY-1D 海洋一号D",d:"COCTS/CZI｜中国｜太阳同步｜50/1100 m｜0.5 天（双星）｜2020 年，与 C 星上下午组网",a:"双星组网实现半天一次全国近海覆盖",t:1,c:1},
+{n:"HY-2B 海洋二号B",d:"SCA/ALT/RM｜中国｜太阳同步｜25 km/沿轨｜14 天｜2018 年，海洋动力三星一体",a:"国产海洋动力卫星，海面风场与有效波高业务化观测",t:1,c:1},
+{n:"FY-3D 风云三号D",d:"MERSI-II｜中国｜极轨｜250—1000 m｜1 天｜2017 年，25 通道全球气象",a:"国产第二代极轨气象卫星，250 m 分辨率全球观测",t:1,c:1},
+{n:"FY-3E 风云三号E",d:"MERSI-LL｜中国｜晨昏轨道｜250—1000 m｜1 天｜2021 年，填补晨昏观测窗口",a:"全球少有的民用晨昏轨道气象卫星，服务夜光与极区观测",t:1,c:1},
+{n:"FY-3G 风云三号G",d:"PMR/MWRI-RM｜中国｜50° 倾斜轨道｜300 m/5 km｜—｜2023 年，降水测量",a:"我国首颗低倾角降水测量卫星，捕捉中低纬降水三维结构",t:1,c:1},
+{n:"FY-4A 风云四号A",d:"AGRI｜中国｜GEO 静止｜0.5—4 km｜15 分钟全盘｜2016 年，新一代静止气象",a:"我国新一代静止气象卫星，分钟级捕捉台风对流",t:1,c:1},
+{n:"吉林一号",d:"光学星座｜中国长光｜太阳同步｜0.5—1 m｜数小时—1 天｜2015 年起，商业遥感星座",a:"国产商业遥感星座，具备视频成像与高频重访能力",t:1,c:1},
+{n:"高景一号",d:"光学｜中国四维｜太阳同步｜0.5 m｜1 天｜2016 年，商业亚米级星座",a:"国产商业亚米级星座，服务测绘与城市精细调查",t:1,c:1},
+/* ---- 扩展选学 ---- */
+{n:"LT-1 陆地探测一号",d:"L-SAR｜中国｜太阳同步｜3—60 m｜干涉模式｜2022 年，双星差分干涉",a:"国产 L 波段干涉 SAR，地质滑坡地面形变自主监测",t:0,c:1},
+{n:"珞珈一号01星",d:"夜光相机｜中国武汉大学｜LEO 700 km｜130 m｜—｜2018 年，夜光科研卫星",a:"国产科研夜光卫星，用于城市社会经济研究",t:0,c:1},
+{n:"SDGSAT-1",d:"微光/热红外/多光谱｜中国科学院｜LEO｜10—30 m｜—｜2021 年，SDG 科学卫星",a:"全球首颗专门服务联合国可持续发展目标的卫星",t:0,c:1},
+{n:"珠海一号 OHS",d:"高光谱｜中国欧比特｜太阳同步｜10 m/2.5 nm｜5 天｜2018 年，商业高光谱星座",a:"国产商业高光谱星座，支撑水质与植被精细反演",t:0,c:1},
+{n:"北京二号",d:"光学｜中国二十一世纪｜太阳同步｜0.8 m｜1 天｜2015 年，商业三星组网",a:"国产商业亚米级三星组网，服务国土与城市建设",t:0,c:1},
+{n:"张衡一号",d:"电磁监测｜中国｜太阳同步｜—｜5 天｜2018 年，地震电磁试验卫星",a:"我国首颗电磁监测试验卫星，探索地震电磁异常",t:0,c:1},
+{n:"CFOSAT 中法海洋星",d:"SWIM/SCAT｜中国—法国｜太阳同步｜—｜13 天｜2018 年，海浪谱与风场",a:"中法联合海洋卫星，首次实现全球海面海浪谱观测",t:0,c:1},
+{n:"GOSAT",d:"TANSO-FTS｜日本 JAXA｜太阳同步｜10 km｜3 天｜2009 年，温室气体柱浓度",t:0},
+{n:"ECOSTRESS",d:"热红外辐射计｜美国 NASA｜ISS｜70 m｜—｜2018 年，蒸散与作物胁迫",t:0},
+{n:"ICESat-2",d:"ATLAS 激光｜美国 NASA｜近极地｜10 m 足印｜91 天｜2018 年，冰盖与海冰高程",t:0},
+{n:"SMAP",d:"L 波段辐射计/雷达｜美国 NASA｜太阳同步｜9—36 km｜2—3 天｜2015 年，土壤水分",t:0},
+{n:"OCO-2",d:"三通道光谱｜美国 NASA｜太阳同步｜1.3 km｜16 天｜2014 年，CO₂ 柱浓度",t:0},
+{n:"TerraSAR-X",d:"X-SAR｜德国 DLR｜太阳同步｜1—3 m｜11 天｜2007 年，商业雷达干涉",t:0},
+{n:"ALOS-2",d:"PALSAR-2｜日本 JAXA｜太阳同步｜3—100 m｜14 天｜2014 年，L 波段宽幅雷达",t:0},
+{n:"RADARSAT-2",d:"C-SAR｜加拿大 CSA｜太阳同步｜1—100 m｜24 天｜2007 年，商业极地雷达",t:0},
+{n:"Pléiades",d:"光学立体｜法国 CNES/Airbus｜太阳同步｜0.5 m｜1 天｜2011 年，商业立体像对",t:0},
+{n:"PlanetScope",d:"光学小星座｜美国 Planet｜太阳同步｜3 m｜1 天｜2016 年起，日覆盖",t:0},
+{n:"SPOT-6/7",d:"NAOMI｜法国｜太阳同步｜1.5 m｜1—3 天｜2012/2014 年，商业宽幅光学",t:0}
+];
+
+/* ============================================================
+   数据 · 第 2 关：分辨率分拣（37 张卡）
+   tier: 0 亚米级 / 1 米级 / 2 十米级 / 3 百米级 / 4 千米级
+   ============================================================ */
+const L2_TIERS=[
+{t:"亚米级",r:"< 1 m"},{t:"米级",r:"1 — 10 m"},{t:"十米级",r:"10 — 100 m"},
+{t:"百米级",r:"100 — 1000 m"},{t:"千米级",r:"≥ 1 km"}];
+
+const L2_POOL=[
+{n:"WorldView-3",tier:0,e:"0.31 m 全色商业卫星，短波红外可识别矿物。",c:0},
+{n:"GF-2 高分二号",tier:0,e:"0.8 m 全色、3.2 m 多光谱。国产成就：我国首颗民用亚米级光学卫星，打破国外亚米数据垄断。",c:1},
+{n:"GF-7 高分七号",tier:0,e:"0.65—0.8 m 全色立体。国产成就：国产亚米级 1:1 万立体测图卫星。",c:1},
+{n:"QuickBird",tier:0,e:"0.65 m 全色，早期商业亚米级代表。",c:0},
+{n:"GeoEye-1",tier:0,e:"0.41 m 全色商业卫星。",c:0},
+{n:"高景一号",tier:0,e:"0.5 m 商业光学。国产成就：国产商业亚米级星座，服务城市精细调查。",c:1},
+{n:"吉林一号",tier:0,e:"0.5—1 m 光学星座。国产成就：国产商业遥感星座，可视频成像。",c:1},
+{n:"Pléiades",tier:0,e:"0.5 m 全色，可获取立体像对。",c:0},
+{n:"SkySat",tier:0,e:"0.5 m 级商业小卫星，可拍短视频。",c:0},
+{n:"WorldView-2",tier:0,e:"0.46 m 全色，8 波段多光谱。",c:0},
+{n:"SPOT-6",tier:1,e:"1.5 m 全色商业卫星，宽幅推扫。",c:0},
+{n:"ZY-3 资源三号",tier:1,e:"2.1 m 全色立体。国产成就：国产 1:5 万立体测图卫星。",c:1},
+{n:"GF-1 PMS",tier:1,e:"2 m 全色、8 m 多光谱。国产成就：高分一号 2 m 分辨率普查。",c:1},
+{n:"PlanetScope",tier:1,e:"3 m 级小星座，可实现每日覆盖。",c:0},
+{n:"RapidEye",tier:1,e:"5 m 多光谱，5 星组网。",c:0},
+{n:"IKONOS",tier:1,e:"1 m 全色，第一颗商业亚米级卫星。",c:0},
+{n:"SPOT-5",tier:1,e:"2.5 m 全色（超模式），5 m 多光谱。",c:0},
+{n:"Sentinel-2 MSI",tier:2,e:"10 m 免费多光谱，13 波段含红边。",c:0},
+{n:"Landsat-8 OLI",tier:2,e:"30 m 经典陆地卫星，16 天重访。",c:0},
+{n:"GF-6 WFV",tier:2,e:"16 m 宽幅。国产成就：国产 16 m 含红边农业卫星。",c:1},
+{n:"HJ-2 CCD",tier:2,e:"16 m 环境减灾。国产成就：国产环境减灾业务星座。",c:1},
+{n:"GF-1 WFV",tier:2,e:"16 m 宽幅，四相机组合 800 km。国产成就：国产宽幅普查主力。",c:1},
+{n:"Sentinel-1 C-SAR",tier:2,e:"10 m 全天候雷达（IW 模式）。",c:0},
+{n:"GF-5 AHSI",tier:2,e:"30 m 高光谱，330 波段。国产成就：国产高光谱业务星。",c:1},
+{n:"ZY-1 02D",tier:2,e:"2 m/30 m，166 波段高光谱。国产成就：首颗业务化高光谱卫星。",c:1},
+{n:"Landsat-7 ETM+",tier:2,e:"15 m 全色、30 m 多光谱。",c:0},
+{n:"OLCI (Sentinel-3)",tier:3,e:"300 m 水色载荷，21 波段。",c:0},
+{n:"MERIS (Envisat)",tier:3,e:"300 m 历史水色载荷，2002—2012。",c:0},
+{n:"HY-1C CZI",tier:3,e:"50 m 海岸带成像。国产成就：国产 50 m 海岸带观测。",c:1},
+{n:"GF-4 高分四号",tier:3,e:"50 m 可见光、400 m 中波红外，静止轨道。国产成就：首颗静止轨道高分辨率光学卫星。",c:1},
+{n:"GOCI-II",tier:3,e:"250 m 静止水色，每小时一次。",c:0},
+{n:"MODIS",tier:4,e:"250—1000 m 多档，2330 km 超大幅宽。",c:0},
+{n:"AVHRR/3",tier:4,e:"1 km 长序列气象载荷。",c:0},
+{n:"FY-3D MERSI-II",tier:4,e:"250—1000 m。国产成就：国产 250 m 全球气象陆地观测。",c:1},
+{n:"FY-4A AGRI",tier:4,e:"500—4000 m 静止轨道。国产成就：国产新一代静止气象卫星。",c:1},
+{n:"Himawari AHI",tier:4,e:"0.5—2 km 静止气象，10 分钟全盘。",c:0},
+{n:"Sentinel-5P TROPOMI",tier:4,e:"3.5×7 km 痕量气体探测。",c:0}
+];
+
+/* ============================================================
+   数据 · 第 3 关：轨道与重访（30 题，单选）
+   ============================================================ */
+const L3_POOL=[
+{q:"Sentinel-2A 单星重访 10 天，A+B 双星组网之后重访变成？",o:["20 天","5 天","10 天不变","1 天"],a:1,e:"两颗卫星相位互补，同一区域被两次覆盖，重访减半。"},
+{q:"GOCI-II 可以做到 1 小时观测一次东海海域，核心原因？",o:["幅宽特别大","卫星飞得快","静止 GEO 轨道","卫星数量多"],a:2,e:"静止轨道相对地面不动，可高频持续凝视同一区域，用扫描间隔而不是重访描述。"},
+{q:"MODIS 为什么几乎可以做到全球每天覆盖一次？",o:["分辨率很高","2330 km 超大幅宽","静止轨道","多颗卫星组网"],a:1,e:"幅宽极大，单星一条轨道就能扫过很宽的地带，一天即可全球覆盖。"},
+{q:"Terra 上的 ASTER 重访 16 天，但实际很难拿到频繁数据，为什么？",o:["轨道不稳定","属于按需任务成像，不是连续推扫","分辨率太低","卫星已经报废"],a:1,e:"ASTER 按指令拍摄，不是每圈都开机连续成像，所以实际可用数据远少于理论重访。"},
+{q:"Landsat-8 和 Landsat-9 两颗卫星组网，联合重访周期？",o:["16 天","8 天","4 天","1 天"],a:1,e:"两星同轨道错开半个周期，重访由 16 天缩短到 8 天。"},
+{q:"以下哪一类卫星，不存在传统“重访周期”概念？",o:["太阳同步 LEO","GEO 静止轨道","极轨卫星","倾斜轨道降水卫星"],a:1,e:"静止轨道始终盯着同一片区域，用扫描间隔（如 15 分钟全盘）描述，不用重访。"},
+{q:"我国风云四号 A（FY-4A）属于静止轨道卫星，它最大优势是？",o:["空间分辨率亚米级","分钟级对同一区域反复成像","重访 16 天","可以穿透云雾"],a:1,e:"15 分钟全盘扫描，台风、对流、洪水可以分钟级跟踪。",cn:1},
+{q:"海洋一号 C 和 D 双星组网，我国近海水色观测可以做到多快？",o:["16 天","5 天","半天一次","1 小时"],a:2,e:"HY-1C/D 上、下午双星配合，实现半日一次近海覆盖。",cn:1},
+{q:"Sentinel-1A 单星重访 12 天，A+C 双星组网 IW 模式重访为？",o:["24 天","6 天","12 天","1 天"],a:1,e:"同型雷达双星错开，重访减半到 6 天。"},
+{q:"什么条件下，小卫星星座可以做到“每日覆盖全球”？",o:["单颗幅宽很大","大量卫星组网协同","静止轨道","分辨率很低"],a:1,e:"靠数量补时间：多颗小卫星分布在不同轨道面，接力覆盖。"},
+{q:"风云三号 E 是我国的晨昏轨道气象卫星，独特优势？",o:["分辨率最高","晨昏时刻成像，适合夜光、极区观测","静止轨道","重访 16 天"],a:1,e:"约 6:00/18:00 过境，填补全球观测的时间窗口。",cn:1},
+{q:"高分四号 GF-4 是静止轨道光学卫星，适合下面哪项任务？",o:["1 m 精细城市测绘","台风、洪水灾害快速凝视观测","森林生物量反演","1:1 万立体测图"],a:1,e:"区域可 20 秒一次凝视成像，适合灾害快反。",cn:1},
+{q:"太阳同步轨道卫星，重访周期和下面哪一项强相关？",o:["卫星颜色","轨道高度、轨道回归周期","数据是否免费","传感器波段数"],a:1,e:"回归周期决定多少天回到同一地面轨迹，幅宽决定一条轨道能扫多宽。"},
+{q:"陆地探测一号 LT-1 双星，主要利用什么技术实现滑坡毫米级形变监测？",o:["光学多光谱","L 波段 SAR 干涉 InSAR","热红外","高光谱"],a:1,e:"L 波段穿透植被，重复轨道干涉测出毫米级地面形变。",cn:1},
+{q:"环境减灾二号 HJ-2A/B 双星组网，重访周期可以达到？",o:["16 天","4 天","1 天","1 小时"],a:1,e:"双星 16 m 宽幅，4 天重访，国内灾害应急业务使用。",cn:1},
+{q:"高分六号 WFV 为什么可以实现 2 天重访能力？",o:["静止轨道","多台相机组合超大幅宽","晨昏轨道","SAR 载荷"],a:1,e:"多台 WFV 拼接约 800 km 幅宽，单轨覆盖大，重访自然短。",cn:1},
+{q:"极轨卫星为什么总在差不多同一地方时过境？",o:["太阳同步轨道保持光照角一致","卫星速度固定不变","地面站统一安排","幅宽限制导致"],a:0,e:"太阳同步轨道进动与太阳同步，同一地方时成像，光照条件稳定，便于比较。"},
+{q:"Sentinel-2 双星为什么能做到 5 天重访？",o:["单星幅宽增大到 290 km 以上两倍","双星相位错开、幅宽 290 km","分辨率降到 30 m","改成了静止轨道"],a:1,e:"单星 10 天、幅宽 290 km，两星相位错开后合并为 5 天。"},
+{q:"高分一号不侧摆 41 天、侧摆 4 天，说明侧摆的作用是？",o:["提高空间分辨率","增加成像机会、缩短重访","改变轨道高度","让数据免费"],a:1,e:"侧摆让相机斜着看邻近条带，能更快重访，但幅宽和几何质量会受影响。",cn:1},
+{q:"高分三号设计 12 种成像模式，主要是为了？",o:["增加波段数","不同幅宽与分辨率组合适配不同任务","延长寿命","降低发射成本"],a:1,e:"从 1 m 聚束到 500 m 扫描，按任务在分辨率和幅宽之间取舍。",cn:1},
+{q:"静止轨道卫星的空间分辨率通常比极轨粗，主要原因是？",o:["轨道太高、距离地面远","传感器工艺差","云层干扰","数据量太大"],a:0,e:"3.6 万 km 的距离下，同样口径相机的地面分辨率会明显变粗。"},
+{q:"Himawari 除了 10 分钟全盘，还能对台风区域更快成像，靠的是？",o:["增加卫星数量","灵活区域扫描","提高轨道高度","改用雷达"],a:1,e:"静止卫星可只扫一小块区域，扫描步进少，耗时就短。"},
+{q:"幅宽与重访的关系，正确的是？",o:["幅宽越小重访越短","两者无关","幅宽越大单轨覆盖越宽，重访越短","幅宽只影响分辨率"],a:2,e:"宽幅一次扫过更大范围，同样回归周期下覆盖次数更多。"},
+{q:"风云三号 G 采用 50° 倾斜轨道而不是太阳同步，原因是？",o:["集中覆盖中低纬降水，不追求全球固定时刻","为了省燃料","为了拍夜光","为了静止凝视"],a:0,e:"低倾角把观测重心放在南北纬 50° 内的降水系统，与极轨互补。",cn:1},
+{q:"资源三号重访 59 天，为什么仍能满足立体测图？",o:["靠每天重复拍摄","三线阵一次过境同时获取立体像对","靠侧摆 1 天重访","靠地面控制点补"],a:1,e:"前后视+正视同时成像，一次过境即可构成立体，不依赖高频重访。",cn:1},
+{q:"Sentinel-3 以 300 m 分辨率实现 1—2 天覆盖，主要靠？",o:["1270 km 大幅宽 + 双星","超高分辨率","静止轨道","大量小卫星"],a:0,e:"幅宽大、双星互补，牺牲细节换覆盖频率。"},
+{q:"同一区域 Landsat 要等 16 天，MODIS 每天都有，根本差异是？",o:["幅宽差异","轨道高度差异","国家不同","波段数量差异"],a:0,e:"MODIS 幅宽 2330 km，Landsat 只有 185 km，单轨覆盖范围差一个量级。"},
+{q:"高分四号“20 秒凝视”指的是？",o:["20 秒拍一张后关机","对同一区域约 20 秒完成一次成像","寿命只有 20 秒","20 秒传输一景"],a:1,e:"面阵相机在静止轨道上快速重复拍摄同一区域，形成高频序列。",cn:1},
+{q:"晨昏轨道卫星的过境地方时大约是？",o:["凌晨 0 点 / 12 点","6:00 / 18:00","9:00 / 21:00","随季节大幅变化"],a:1,e:"晨昏轨道固定在晨昏线附近，太阳高度角很低，适合弱光与极区观测。"},
+{q:"光学卫星和 SAR 卫星的重访周期，共同决定因素是？",o:["波段数量","传感器价格","轨道回归周期与幅宽","数据政策"],a:2,e:"无论光学还是雷达，都是轨道回到同一轨迹的周期与单轨覆盖宽度共同决定。",cn:0}
+];
+
+/* ============================================================
+   数据 · 第 4 关：波段连连看（22 组）
+   ============================================================ */
+const L4_POOL=[
+{l:"红光 0.63—0.68 μm",r:"植被叶绿素强吸收，NDVI 的红通道",e:"红光被叶绿素大量吸收，反射率随长势下降。GF-1/GF-6、Sentinel-2 都标配该波段。"},
+{l:"近红外 0.84—0.88 μm",r:"健康植被高反射，NDVI 的近红外通道",e:"叶片细胞结构强烈反射近红外，是植被指数另一根支柱。国产高分系列全部具备。"},
+{l:"红边 0.70—0.74 μm",r:"叶绿素胁迫与作物长势的敏感指示",e:"叶绿素下降时红边向短波方向偏移。高分六号专门加了红边波段服务农业。"},
+{l:"短波红外 1.6 μm",r:"区分云、雪与土壤湿度",e:"雪在 1.6 μm 强烈吸收、云反射高，是云雪判别的关键波段。Landsat、GF-6 均有。"},
+{l:"热红外 10—12 μm",r:"地表温度、海温反演（分裂窗算法）",e:"接收地物自身热辐射，11/12 μm 双通道可校正大气。风云、高分五号都带热红外。"},
+{l:"680—710 nm 红—红边区间",r:"水体叶绿素、蓝藻与赤潮识别",e:"藻类荧光在此抬升，形成特征峰。海洋一号 C 用它监测近海赤潮。"},
+{l:"L 波段微波 SAR",r:"土壤水分、植被穿透与形变 InSAR",e:"L 波段波长大，能穿透冠层打到地表。陆地探测一号是国产 L-SAR 代表。"},
+{l:"高光谱 400—2500 nm 连续窄波段",r:"矿物识别与水体精细组分反演",e:"数百个连续窄波段可匹配诊断性吸收谱。高分五号 AHSI 330 波段。"},
+{l:"中波红外 3.5—4.1 μm",r:"高温火点与秸秆焚烧识别",e:"高温目标在此波段辐射极强，远高于常温地表。高分四号可静止盯火点。"},
+{l:"蓝光 0.45—0.52 μm",r:"清澈水体穿透与浑浊度评估",e:"蓝光在水体衰减最小，适合深水与浅海。Landsat 8 新增海岸蓝波段。"},
+{l:"绿光 0.52—0.60 μm",r:"植被绿度与浅水底质判别",e:"健康植被绿光反射相对高，肉眼看到的绿色即来源于此。"},
+{l:"短波红外 2.1—2.3 μm",r:"蚀变矿物与岩性识别",e:"黏土、碳酸盐等有诊断吸收。WorldView-3、GF-5 的 SWIR 波段用于找矿。"},
+{l:"C 波段 SAR",r:"洪涝淹没范围、海冰与全天候成像",e:"C 波段对水面与建筑物敏感，是应急洪涝主力。高分三号、Sentinel-1 均用 C 波段。"},
+{l:"X 波段 SAR",r:"城市高分辨率成像与建筑形变",e:"X 波段波长短，同样天线可获得更高分辨率，适合城市细节。TerraSAR-X 为代表。"},
+{l:"紫外 0.35—0.39 μm",r:"气溶胶与臭氧柱浓度探测",e:"紫外对气溶胶和臭氧敏感，TROPOMI、海洋一号 UVI 都用它。"},
+{l:"1.38 μm 水汽吸收带",r:"卷云检测",e:"该波段水汽吸收极强，低云被遮蔽、高空卷云仍可见，是卷云掩膜利器。"},
+{l:"0.905 / 0.936 μm",r:"大气水汽含量反演",e:"水汽吸收带内的强弱对比可反演柱水汽，用于大气校正与天气分析。"},
+{l:"O₂-A 0.76 μm",r:"大气校正与叶绿素荧光",e:"氧气吸收带可用于归一化大气效应，也能提取植被荧光信号。"},
+{l:"Ku/C 波段散射计",r:"海面风场与台风风速",e:"海面粗糙度改变后向散射，反推风速风向，可穿云观测台风。"},
+{l:"激光 532 / 1064 nm",r:"冰盖、海冰与树冠高程",e:"激光测高直接量距离，精度达厘米级。ICESat-2 用双波长测冰。"},
+{l:"L 波段微波辐射计",r:"土壤水分与海表盐度",e:"土壤含水量改变介电常数，进而改变亮温。SMAP、SMOS 是代表。"},
+{l:"夜光 0.5—0.9 μm 微光",r:"城市灯光与社会经济活动",e:"夜间灯光强度与人口、电力、GDP 高度相关。珞珈一号、SDGSAT-1 可测。"}
+];
+
+/* ============================================================
+   数据 · 第 5 关：赛车检查站题库（18 题，每局 6 题）
+   a 为正确选项下标数组（多选）
+   ============================================================ */
+const L5_POOL=[
+{q:"监测巢湖夏季蓝藻，需要日尺度高频水色，并要较高分辨率看清湖湾。",o:["Sentinel-2","GOCI-II","HY-1C 海洋一号C","Landsat-8"],a:[0,2],e:"HY-1C 提供每日水色，Sentinel-2 的 10 m 细节补湖湾。GOCI-II 是静止水色，但主要覆盖海域，对内陆湖不适用。",tip:"HY-1C 是我国自主海洋水色卫星，支撑近海与湖泊蓝藻、悬浮泥沙业务监测。",hint:"需要“每日水色”与“10 m 细节”各一颗。"},
+{q:"池州城市街区尺度城市热岛，反演地表温度。",o:["GF-2","Landsat-8/9 TIRS","SDGSAT-1","Sentinel-1"],a:[1,2],e:"Landsat TIRS 100 m 热红外是经典选择；SDGSAT-1 的 30 m 热红外更细，适合街区尺度。",tip:"SDGSAT-1 是我国科学卫星，30 m 热红外用于城市热环境研究。",hint:"找带热红外通道的卫星，注意分辨率。"},
+{q:"皖南水稻地块识别作物胁迫，需要红边波段。",o:["Landsat-5","GF-6 高分六号","Sentinel-2","MODIS"],a:[1,2],e:"GF-6 的 8 波段含红边与黄波段；Sentinel-2 的 B5/B6 红边也成熟。Landsat-5 没有红边。",tip:"高分六号是我国专门面向农业的卫星，自带红边、黄波段。",hint:"红边是关键词，注意哪些载荷真的有红边。"},
+{q:"皖南洪涝，持续阴雨多云，需要不受云影响识别淹没范围。",o:["Sentinel-2","Landsat-9","GF-3 高分三号 SAR","Sentinel-1"],a:[2,3],e:"光学在阴雨下失效，C 波段 SAR 可全天候成像，水体在 SAR 上呈暗斑。",tip:"高分三号是国产 C 波段多模式 SAR，云雾黑夜均可观测洪涝。",hint:"云雨天气，只能用雷达。"},
+{q:"做全国土地利用普查，需要大宽幅、中等分辨率的国产免费数据。",o:["WorldView-3","GF-1 WFV","SPOT-6","ICESat-2"],a:[1],e:"GF-1 WFV 四相机组合约 800 km 幅宽、16 m 分辨率，正是为宽幅普查设计。",tip:"高分一号 WFV 四相机组合 800 km 超大幅宽，支撑全国国土普查。",hint:"先排除亚米级商业星和激光测高。"},
+{q:"滑坡地质灾害，需要毫米级地面形变监测。",o:["GF-4","LT-1 陆地探测一号","Sentinel-2","Sentinel-1"],a:[1,3],e:"两者都是 SAR，可做重复轨道干涉；LT-1 为 L 波段，穿透植被更好。",tip:"陆地探测一号是我国自主 L 波段干涉 SAR 星座，用于滑坡沉降监测。",hint:"毫米级形变 = InSAR，必须选雷达。"},
+{q:"台风过境，需要分钟级持续凝视台风云系。",o:["Landsat-9","Sentinel-2","FY-4A 风云四号A","GF-7"],a:[2],e:"只有静止轨道能做到 15 分钟全盘、区域更快；FY-4A 是国产静止气象主力。",tip:"风云四号 A 国产静止气象卫星，15 分钟全盘扫描，台风监测业务主力。",hint:"分钟级凝视，只能是静止轨道。"},
+{q:"1:1 万比例尺立体测绘，获取高精度 DEM。",o:["MODIS","Sentinel-3","GF-7 高分七号","TerraSAR-X"],a:[2],e:"GF-7 双线阵 0.65 m 全色，专为 1:1 万立体测图设计。",tip:"高分七号国产亚米级双线阵立体测绘卫星，实现 1:1 万测图自主可控。",hint:"找“立体测绘”专用星。"},
+{q:"获取夜间城市灯光，开展社会经济研究。",o:["GF-3","珞珈一号01星","Landsat-8","VIIRS-DNB"],a:[1,3],e:"珞珈一号 130 m 夜光相机，VIIRS DNB 提供长序列日产品，两者互补。",tip:"珞珈一号是国产科研夜光遥感卫星，用于城市社会经济研究。",hint:"要有微光/夜光通道。"},
+{q:"大气污染 NO₂ 痕量气体监测。",o:["GF-2","GF-5 高分五号","Sentinel-5P","ZY-3"],a:[1,2],e:"GF-5 带大气痕量气体探测载荷，TROPOMI 全球日覆盖、灵敏度高。",tip:"高分五号搭载大气载荷，国产卫星实现痕量气体观测。",hint:"找大气专用载荷，不是普通光学。"},
+{q:"长江口悬浮泥沙季节变化，需要日尺度水色观测。",o:["HY-1C/D","GOCI-II","Sentinel-2","GF-7"],a:[0,1],e:"HY-1C/D 双星半日覆盖，GOCI-II 静止每小时一次；两者都适合高浊度河口。",tip:"HY-1C/D 双星组网实现半天一次全国近海覆盖。",hint:"河口泥沙要求高频 + 水色波段。"},
+{q:"城市违建巡查，需要亚米级影像看清单体建筑。",o:["GF-2","高景一号","MODIS","FY-4A"],a:[0,1],e:"GF-2 0.8 m、高景 0.5 m 都能分辨单体建筑；MODIS 与 FY-4A 像元太大。",tip:"高分二号是我国首颗民用亚米级光学卫星。",hint:"亚米级 = 小于 1 m。"},
+{q:"全国冬小麦面积调查，要求 16 m 宽幅、含红边。",o:["GF-6 WFV","GF-1 WFV","SPOT-6","WorldView-3"],a:[0,1],e:"GF-6 WFV 16 m 含红边，GF-1 WFV 16 m 宽幅；两者可组合作物普查。SPOT-6 是 1.5 m 商业星，幅宽小、成本高。",tip:"高分六号 8 波段 16 m 宽幅，是我国农业遥感专用星。",hint:"要“16 m + 宽幅”，不是越细越好。"},
+{q:"北极夏季海冰范围监测，需要穿云能力。",o:["Sentinel-1","HY-1C","Landsat-8","GF-2"],a:[0,1],e:"Sentinel-1 全天候 SAR 看冰水边界，HY-1C 提供海冰覆盖产品；光学受极区云与极夜限制。",tip:"HY-1C 是我国自主海洋卫星，具备极区海冰观测能力。",hint:"极区多云雾，优先雷达。"},
+{q:"矿山生态修复调查，需要高光谱找蚀变矿物 + 亚米级看现场。",o:["GF-5","GF-2","MODIS","GOCI-II"],a:[0,1],e:"GF-5 AHSI 330 波段识别蚀变矿物，GF-2 0.8 m 提供现场细节。",tip:"高分五号是我国首颗陆地大气综合高光谱卫星。",hint:"一个管“成分”，一个管“细节”。"},
+{q:"近海海温日尺度监测，用于养殖与台风预警。",o:["MODIS","FY-3D MERSI-II","Sentinel-2","GF-7"],a:[0,1],e:"两者都有 11/12 μm 分裂窗通道，可每日反演海温；GF-7 与 S2 没有热红外。",tip:"风云三号 D 的 MERSI-II 具备 250 m 热红外通道，国产海温产品主力。",hint:"海温反演必须有热红外。"},
+{q:"高原湖泊水位变化监测，需要厘米级高程。",o:["ICESat-2","Sentinel-3 SRAL","Landsat-8","GF-1"],a:[0,1],e:"激光与雷达高度计可直接测水面高程，精度厘米级；光学只能看面积。",tip:"我国可结合 Sentinel-3 高度计与国产光学做湖泊水位—面积联合监测。",hint:"水位是“高程”，不是“影像”。"},
+{q:"化工园区气体泄漏排查，需要痕量气体高灵敏探测。",o:["GF-5","Sentinel-5P","GF-3","PlanetScope"],a:[0,1],e:"GF-5 大气载荷与 TROPOMI 都能测 NO₂/SO₂ 等；GF-3 是雷达，Planet 是普通光学。",tip:"高分五号大气载荷可支撑国产污染气体监测。",hint:"普通光学看不到气体分子。"}
+];
+
+/* ============================================================
+   数据 · 第 6 关：障碍题（10 题抽取 6）+ 终点 Boss（固定）
+   ============================================================ */
+const L6_POOL=[
+{q:"对长江中下游流域做长时间序列农作物监测，既要大区域普查，又要地块级胁迫识别，选国产组合。",o:["GF-6 WFV","GF-1 WFV","Landsat-5","WorldView-3"],a:[0,1],e:"GF-6 的 16 m 红边负责地块胁迫，GF-1 WFV 的 800 km 宽幅负责流域普查，两者同为国产、可长期业务运行。",tip:"我国高分系列已构建起国产农业遥感业务观测体系。",hint:"一大区域、一地块，各选一颗国产星。"},
+{q:"东南沿海夏季台风频发：①分钟级跟踪台风云系；②台风过后云雨条件下识别淹没范围。",o:["FY-4A","GF-3","Sentinel-2","MODIS"],a:[0,1],e:"FY-4A 静止 15 分钟全盘跟踪云系；GF-3 C 波段 SAR 穿云提取淹没范围。",tip:"风云四号盯台风、高分三号看洪涝，是国产灾害应急的经典组合。",hint:"一个静止、一个雷达。"},
+{q:"巢湖流域长期蓝藻监测：既要日内高频捕捉暴发，也要较高分辨率看清湖湾细节。",o:["HY-1C","Sentinel-2","Landsat-8","GF-7"],a:[0,1],e:"HY-1C 每日水色捕捉暴发，Sentinel-2 10 m 看湖湾细节；Landsat 16 天太慢，GF-7 无专门水色波段。",tip:"海洋一号 C 是我国自主水色卫星，可支撑内陆湖泊蓝藻监测。",hint:"高频 + 细节，各一颗。"},
+{q:"南方山区滑坡隐患：需要长期毫米级形变，同时要光学影像做地貌解译。",o:["LT-1","GF-2","GF-7","MODIS"],a:[0,1,2],e:"LT-1 的 L 波段 InSAR 测形变；GF-2 0.8 m 或 GF-7 0.65 m 做地貌与承灾体解译。MODIS 太粗。",tip:"陆地探测一号是国产 L 波段干涉 SAR 星座，专为地质灾害形变监测设计。",hint:"形变靠雷达，解译靠亚米光学。"},
+{q:"全国生态环境业务监测，灾害发生后快速获取 16 m 宽覆盖影像。",o:["HJ-2A/B","GF-1 WFV","Landsat-9","SPOT-6"],a:[0],e:"HJ-2A/B 双星 16 m、4 天重访，是环境减灾业务星座；Landsat 重访太慢，SPOT-6 幅宽小且商业。",tip:"环境减灾二号接替环境一号，是我国环境灾害监测的业务星座。",hint:"关键词是“环境减灾”与“4 天”。"},
+{q:"城市热岛 + 夜光两个维度评估城市发展，选国产数据源。",o:["SDGSAT-1","珞珈一号","Landsat-8","GF-3"],a:[0,1],e:"SDGSAT-1 同时带 30 m 热红外与微光，珞珈一号 130 m 夜光；两者可交叉验证。",tip:"SDGSAT-1 是全球首颗服务联合国可持续发展目标的科学卫星。",hint:"一颗星若能同时给热与光，最省事。"},
+{q:"黄淮海平原冬小麦旱情监测，需要长时序长势 + 土壤水分。",o:["GF-6","SMAP","MODIS","WorldView-3"],a:[0,1,2],e:"GF-6 红边看长势，MODIS 建长序列，SMAP 提供根区土壤水分；WorldView-3 幅宽太小、成本高。",tip:"国产高分六号 + 国际土壤水分产品，是旱情监测的常用组合。",hint:"旱情 = 长势 + 水分，两条线都要。"},
+{q:"长三角城市扩张四十年变化，需要长序列 + 近期高分辨率。",o:["Landsat 系列","高景一号","Sentinel-1","GOCI-II"],a:[0,1],e:"Landsat 1980s 起的长序列做历史边界，高景 0.5 m 做近期细节；GOCI-II 是水色，Sentinel-1 是雷达。",tip:"国产高景一号 0.5 m 可与 Landsat 长序列衔接，做城市扩张分析。",hint:"历史靠长序列，现在靠亚米。"},
+{q:"青藏高原冰川变化，需要边界与高程两类证据。",o:["Sentinel-2","ICESat-2","GF-3","MODIS"],a:[0,1],e:"Sentinel-2 10 m 提冰川边界，ICESat-2 激光测高程变化；MODIS 太粗，GF-3 雷达对冰面区分有限。",tip:"我国可结合国产高分光学与激光测高开展冰川监测。",hint:"边界用光学、高程用激光。"},
+{q:"港口与近海船舶监测，要求全天候、可辨单体船只。",o:["Sentinel-1","吉林一号","GF-2","Landsat-8"],a:[0,1],e:"Sentinel-1 SAR 全天候发现船只，吉林一号 0.5 m 光学做身份确认；Landsat 重访太慢。",tip:"国产吉林一号具备视频成像能力，可用于船舶动态确认。",hint:"一个管“有没有”，一个管“是谁”。"}
+];
+
+const L6_BOSS={
+title:"终点 Boss 闸门 · 平天湖综合监测方案",
+intro:"针对平天湖，构建一套完整国产卫星监测方案，覆盖三个场景。每问可多选。",
+qs:[
+{q:"① 日内蓝藻暴发高频监测，选哪颗？",o:["HY-1C 海洋一号C","FY-4A 风云四号A","Landsat-8","MODIS"],a:[0],e:"HY-1C 的水色载荷每日过境，COCTS/CZI 可反演叶绿素与藻蓝蛋白，是日内高频监测主选。"},
+{q:"② 季度尺度高分辨率湖湾泥沙与岸带植被，选哪颗？",o:["GF-6 高分六号","GF-2 高分二号","Sentinel-3","MODIS"],a:[0],e:"GF-6 的 16 m 8 波段含红边与黄波段，兼顾泥沙与植被；若需更细湖湾边界，可加 GF-2 0.8 m 补细节。"},
+{q:"③ 极端暴雨、多云阴雨条件下识别淹没区，选哪颗？",o:["GF-3 高分三号","Sentinel-2","Landsat-9","HY-1C"],a:[0],e:"GF-3 C 波段 SAR 穿云成像，水体呈低后向散射暗斑，是汛期应急主选。"}
+]};
+
+/* ============================================================
+   公共引擎：计分 / 存档 / 导航 / 弹窗 / 提示 / 答题 / 手册 / 教师模式
+   ============================================================ */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const pickN=(a,n)=>shuffle(a).slice(0,n);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const KEY='orbit-class-game-v1';
+const RANKS=['见习观察员','波段解析员','选星学徒','初级调度员','遥感赛车手','国家级对地观测总调度'];
+const LEVELS=[
+{id:'lv1',no:'01',name:'认星台',sub:'记忆翻卡',desc:'从 54 对卫星卡里随机抽牌，翻牌配对。连续两轮全对通关，认全中外主力卫星。',rk:0},
+{id:'lv2',no:'02',name:'分辨率分拣站',sub:'拖拽分类',desc:'卫星卡向下掉落，拖进亚米 / 米 / 十米 / 百米 / 千米五个箱子，错三次重置。',rk:1},
+{id:'lv3',no:'03',name:'轨道与重访实验室',sub:'选择题',desc:'30 题库随机抽 8 题，讲清幅宽、轨道、组网如何决定重访。答对 7 题通关。',rk:2},
+{id:'lv4',no:'04',name:'波段效应连连看',sub:'连线题',desc:'左波段右现象，连错自动弹回。连续两轮零错误通关。',rk:3},
+{id:'lv5',no:'05',name:'赛车竞速',sub:'应用选星',desc:'自己踩油门冲过 6 个检查站，答对加速、答错减速，生命耗尽自动进下一关。',rk:4},
+{id:'lv6',no:'06',name:'马里奥式闯关',sub:'综合方案',desc:'跳跃、连跳、捡枪打怪兽，躲开巨石与雾墙，最后在平天湖 Boss 闸门交出方案。',rk:5}
+];
+
+/* 题库答案统一成数组：兼容早期写成下标数字的题 */
+[L3_POOL,L5_POOL,L6_POOL,(L6_BOSS&&L6_BOSS.qs)||[]].forEach(pool=>{
+  if(!Array.isArray(pool))return;
+  pool.forEach(q=>{if(q&&typeof q.a==='number')q.a=[q.a];});
+});
+
+/* ---------------- 分值表 ---------------- */
+const SCORE={
+ l1pair:4, l1miss:-3, l1clear:40,
+ l2ok:6, l2bad:-4, l2clear:40,
+ l3ok:10, l3bad:-5, l3clear:60,
+ l4ok:6, l4bad:-5, l4clear:40,
+ l5gate:15, l5ring:8, l5bad:-6, l5clear:60, l5crash:-8,
+ l6coin:2, l6hit:12, l6bad:-8, l6clear:80, boss:20, l6block:5, l6mush:5
+};
+
+function freshSave(){return{rank:0,done:{},wrong:[],seen:[],items:{},best:{},plays:0,total:0,runs:[]};}
+let S=freshSave();
+function loadSave(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(raw&&typeof raw==='object') S=Object.assign(freshSave(),raw);
+    if(!Array.isArray(S.wrong))S.wrong=[];
+    if(!Array.isArray(S.seen))S.seen=[];
+    if(!Array.isArray(S.runs))S.runs=[];
+    if(!S.done||typeof S.done!=='object')S.done={};
+    if(!S.items||typeof S.items!=='object')S.items={};
+    if(typeof S.total!=='number')S.total=0;
+  }catch(e){S=freshSave();}
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+loadSave();
+
+/* ---------------- 本局计分 ---------------- */
+let RUN={active:false,id:null,name:'',score:0,ok:0,bad:0,t:0};
+function startRun(id){
+  if(RUN.active)finishRun(false);
+  const lv=LEVELS.find(l=>l.id===id)||{name:id};
+  RUN={active:true,id,name:lv.name,score:0,ok:0,bad:0,t:Date.now()};
+  paintScore();
+}
+function addScore(n){
+  if(!RUN.active||!n)return;
+  RUN.score+=n;
+  if(n>0)RUN.ok++;else RUN.bad++;
+  paintScore();floatDelta(n);
+}
+function paintScore(){
+  const pill=$('#scorePill');if(!pill)return;
+  pill.innerHTML='本关 <b>'+RUN.score+'</b> 分<span class="sep">·</span>累计 <b>'+(S.total+(RUN.active?RUN.score:0))+'</b>';
+}
+let floatTimer=0;
+function floatDelta(n){
+  const box=$('#scorePill');if(!box)return;
+  const el=document.createElement('i');
+  el.className='floatdelta '+(n>0?'up':'down');
+  el.textContent=(n>0?'+':'')+n;
+  box.appendChild(el);
+  setTimeout(()=>el.remove(),950);
+}
+function finishRun(win){
+  if(!RUN.active)return null;
+  const rec={t:new Date().toLocaleString('zh-CN',{hour12:false}),id:RUN.id,name:RUN.name,score:RUN.score,ok:RUN.ok,bad:RUN.bad,win:!!win};
+  S.plays++;S.total+=RUN.score;
+  S.runs.unshift(rec);S.runs=S.runs.slice(0,80);
+  save();RUN.active=false;paintScore();renderHome();
+  return rec;
+}
+function autoAdvance(id,note){
+  const i=LEVELS.findIndex(l=>l.id===id);
+  const next=LEVELS[i+1];
+  const rec=finishRun(false);
+  if(rec)toast('本关得分 '+rec.score+' 分，已记入成绩单','gold');
+  toast(note||'生命耗尽，自动进入下一关','bad');
+  setTimeout(()=>{ if(next)goLevel(next.id); else goHome(); },1500);
+}
+
+/* ---------------- 提示 ---------------- */
+function toast(msg,cls){
+  const box=$('#toasts'); if(!box)return;
+  const el=document.createElement('div');
+  el.className='toast '+(cls||''); el.innerHTML=msg;
+  box.appendChild(el);
+  setTimeout(()=>{el.style.transition='.3s';el.style.opacity='0';el.style.transform='translateX(16px)';},3200);
+  setTimeout(()=>el.remove(),3600);
+}
+
+/* ---------------- 弹窗 ---------------- */
+let modalStack=[],modalCloseHook=null;
+function openModal(opt){
+  const ov=$('#overlay'), box=$('#modalBox');
+  modalCloseHook=null;
+  ov.classList.remove('hidden');
+  const closable=opt.closable!==false;
+  box.innerHTML='';
+  const head=document.createElement('div');head.className='mhead';
+  head.innerHTML='<div class="mtitle">'+(opt.title||'')+'</div>';
+  if(closable){
+    const x=document.createElement('button');x.className='mclose';x.innerHTML='✕';
+    x.onclick=()=>closeModal();head.appendChild(x);
+  }
+  box.appendChild(head);
+  const body=document.createElement('div');body.className='mbody';
+  if(opt.html)body.innerHTML=opt.html;
+  if(opt.node)body.appendChild(opt.node);
+  box.appendChild(body);
+  if(opt.actions&&opt.actions.length){
+    const ac=document.createElement('div');ac.className='mactions';
+    opt.actions.forEach(a=>{
+      const b=document.createElement('button');
+      b.className='btn '+(a.cls||'');
+      b.textContent=a.label;
+      b.onclick=()=>{if(a.onClick)a.onClick();};
+      if(a.disabled)b.disabled=true;
+      ac.appendChild(b);
+    });
+    box.appendChild(ac);
+  }
+  if(closable){
+    ov.onclick=e=>{if(e.target===ov)closeModal();};
+  }else{ov.onclick=null;}
+  modalStack.push({opt,box});
+  return box;
+}
+function closeModal(){
+  $('#overlay').classList.add('hidden');
+  $('#modalBox').innerHTML='';
+  modalStack=[];
+  const h=modalCloseHook;modalCloseHook=null;
+  if(h)h();
+}
+function modalOpen(){return !$('#overlay').classList.contains('hidden');}
+
+/* ---------------- 答题通用 ---------------- */
+function qid(q){return (q.q||'').slice(0,28);}
+function pushWrong(q,src){
+  if(S.wrong.some(w=>qid(w)===qid(q)))return false;
+  S.wrong.push({id:qid(q),src:src,q:q.q,o:q.o,a:q.a,e:q.e,tip:q.tip,hint:q.hint});
+  save();return true;
+}
+function removeWrong(q){
+  const i=S.wrong.findIndex(w=>qid(w)===qid(q));
+  if(i>=0){S.wrong.splice(i,1);save();}
+}
+function buildOptions(q,onPick){
+  const wrap=document.createElement('div');wrap.className='opts';
+  const multi=q.a.length>1;
+  const keys='ABCDEFGH';
+  const tag=document.createElement('div');
+  tag.className='qtag '+(multi?'multi':'single');
+  tag.innerHTML=multi
+    ? '多选 · 本题要选 <b>'+q.a.length+'</b> 项（选齐后再提交）'
+    : '单选 · 本题只有 1 个正确答案';
+  wrap.appendChild(tag);
+  const selected=new Set();
+  q.o.forEach((text,i)=>{
+    const b=document.createElement('button');b.className='opt';
+    b.innerHTML='<span class="k">'+keys[i]+'</span><span class="ct">'+(multi?'<span class="box">☐</span> ':'')+text+'</span><span class="ck">✓</span>';
+    b.dataset.i=i;
+    b.onclick=()=>{
+      if(b.classList.contains('dim')||b.classList.contains('right')||b.classList.contains('wrong'))return;
+      if(multi){
+        if(selected.has(i)){selected.delete(i);b.classList.remove('sel');}
+        else{selected.add(i);b.classList.add('sel');}
+        const box=b.querySelector('.box');
+        if(box)box.textContent=selected.has(i)?'☑':'☐';
+        onPick(Array.from(selected).sort(),false);
+      }else{
+        $$('.opt',wrap).forEach(x=>x.classList.remove('sel'));
+        b.classList.add('sel');
+        selected.clear();selected.add(i);
+        onPick(Array.from(selected),true);
+      }
+    };
+    wrap.appendChild(b);
+  });
+  return {wrap,selected};
+}
+function markOptions(container,ans,userAns){
+  $$('.opt',container).forEach(b=>{
+    const i=Number(b.dataset.i);
+    b.classList.add('dim');
+    if(ans.includes(i))b.classList.add('right');
+    else if(userAns.includes(i))b.classList.add('wrong');
+  });
+}
+function feedbackHTML(q,ok){
+  return '<div class="explain '+(ok?'':'bad')+'"><b>'+(ok?'✓ 正确':'✗ 答错了')+'</b>　'+q.e+
+    (q.tip?'<div class="achievement">🇨🇳 '+q.tip+'</div>':'')+'</div>';
+}
+/* ---------------- 手册（2 次 · 30 秒） ---------------- */
+const MAN={};
+const MANUAL_TITLE={lv1:'卫星参数速查',lv2:'分辨率分档',lv3:'轨道与重访速查',lv4:'波段—应用速查',lv5:'应用选星手册',lv6:'综合方案速查'};
+function resetMan(){LEVELS.forEach(l=>MAN[l.id]=2);refreshManualBtns();}
+function refreshManualBtns(){
+  LEVELS.forEach(l=>{
+    const b=$('#'+l.id.replace('lv','l')+'manual');
+    if(!b)return;
+    const n=MAN[l.id];
+    if(n===undefined)return;
+    b.textContent='📖 查阅手册 ×'+n;
+    b.disabled=n<=0;
+  });
+}
+function addMan(id,n){MAN[id]=(MAN[id]||0)+n;refreshManualBtns();}
+
+let manInt=0;
+function manualSheet(id,html,onResume){
+  if((MAN[id]||0)<=0){toast('本关手册次数用完了','bad');return false;}
+  MAN[id]--;refreshManualBtns();
+  let left=30;
+  const box=openModal({title:'📖 '+MANUAL_TITLE[id]+' · 记忆时间 30 秒',closable:true});
+  const body=$('.mbody',box);
+  body.innerHTML='<div class="mantimer"><span>剩余 <b id="manLeft">30</b> 秒</span><span class="manbar"><i id="manFill" style="width:100%"></i></span></div>'+html+
+    '<p class="note" style="margin-top:8px">30 秒后自动关闭；看够了也可以点右上角 ✕ 提前关闭。</p>';
+  modalCloseHook=()=>{if(manInt){clearInterval(manInt);manInt=0;} if(onResume)onResume();};
+  clearInterval(manInt);
+  manInt=setInterval(()=>{
+    if(!modalOpen()){clearInterval(manInt);manInt=0;return;}
+    left--;
+    const l=$('#manLeft'),f=$('#manFill');
+    if(l)l.textContent=Math.max(0,left);
+    if(f)f.style.width=(Math.max(0,left)/30*100)+'%';
+    if(left<=0){clearInterval(manInt);manInt=0;closeModal();toast('时间到，手册自动关闭','bad');}
+  },1000);
+  return true;
+}
+
+/* ---------------- 每关教程 / 帮助 ---------------- */
+const TUT={
+lv1:{
+ how:'翻开两张卡：一张是卫星名，一张是它的参数，配对成功就锁定。连续两轮全部配对即通关。',
+ keys:['鼠标点卡片翻面；本轮牌数第 1 轮 8 对、第 2 轮 10 对。','配对成功锁绿并显示卫星成就；配对失败会扣分并翻回去。','手册有 2 次，每次 30 秒，会把未配对的卡面全部翻开给你记。'],
+ score:'配对成功 +4 分，配错 −3 分，通关 +40 分；配错满 6 次自动进入第 2 关。'
+},
+lv2:{
+ how:'卫星卡从上方落下，把它拖进对应的分辨率箱子。正确分拣 15 张通关。',
+ keys:['五个箱子：亚米级 <1 m、米级 1—10 m、十米级 10—100 m、百米级 100—1000 m、千米级 ≥1 km。','拖错扣 1 条命并弹出解析；卡片掉出屏幕不算错，会重新出现。','生命 3 条，耗尽自动进入第 3 关。'],
+ score:'分对 +6 分，分错 −4 分，通关 +40 分。'
+},
+lv3:{
+ how:'随机抽 8 题，答对 7 题通关。单选点一下就算提交，多选要选齐后点“提交答案”。',
+ keys:['重访 ≈ 轨道回归周期 ÷ 单轨能扫几条；幅宽越大、组网越多回来得越快。','静止轨道谈“扫描间隔”，不谈重访周期。','每题上面会标明“单选”还是“多选（选 N 项）”。'],
+ score:'答对 +10 分，答错 −5 分并扣 1 条命，通关 +60 分。'
+},
+lv4:{
+ how:'左边点一个波段，右边点一个现象，连对锁绿；连错自动弹回并给解析。连续两轮零错通关。',
+ keys:['每轮 6 组，左列右列顺序都会打乱。','连错不仅会弹回，还会计入本轮错误，连续计数清零。','手册里有波段—应用对照表，30 秒。'],
+ score:'连对 +6 分，连错 −5 分，连续两轮通关 +40 分；连错满 5 次自动进入第 5 关。'
+},
+lv5:{
+ how:'完全手动驾驶：踩油门才走，松手就停；路上有路障锥，按空格跳过去，撞上要扣分。',
+ keys:['油门：↑ / W / 屏幕“油门 ▲”；刹车：↓ / S / “刹车 ▼”。','倒车：← / A / “倒车 ◀”；跳跃：空格 或“跳跃 ␣”。','跳一次能越过两个连排的路障锥；空中不能二段跳，落地后再按。','到检查站会停车出题，答对继续，答错扣分扣命。','生命 3 条，耗尽自动进入第 6 关。'],
+ score:'检查站答对 +15 分，光环答对 +8 分，答错 −6 分，撞路障 −8 分，冲线 +60 分。'
+},
+lv6:{
+ how:'完全手动操控调度员：左右走、跳阶梯、顶问号砖块拿蘑菇、吃金币补子弹、开枪打怪兽。',
+ keys:['← / A 后退，→ / D 前进；松手就停，不按键不会自己走。','空格 / ↑ 跳跃，空中还能再跳 2 次（共 3 段），够高处金币。','J / K 开枪，先捡 🔫 或吃金币攒子弹。','金币 +2 分并 +1 子弹；顶砖块 +5 分掉蘑菇，蘑菇 +5 分 +3 子弹。','撞到障碍或怪兽要答题：答对 +12 分，答错 −8 分且生命 −1。'],
+ score:'金币 +2 分，顶砖 +5 分，蘑菇 +5 分，答对 +12 分，答错 −8 分，通关 +80 分，Boss 每问 +20 分。'
+}
+};
+function tutHTML(id){
+  const t=TUT[id];if(!t)return '';
+  return '<div class="tut"><p class="tutline">'+t.how+'</p><ul>'+t.keys.map(k=>'<li>'+k+'</li>').join('')+'</ul>'+
+    '<div class="tutscore">计分：'+t.score+'</div></div>';
+}
+function showTutorial(id,onStart){
+  const lv=LEVELS.find(l=>l.id===id);if(!lv)return;
+  const box=openModal({title:'第 '+(lv.no.replace(/^0/,''))+' 关 · '+lv.name+'　玩法',closable:true,html:tutHTML(id)});
+  const act=document.createElement('div');act.className='mactions';
+  const go=document.createElement('button');go.className='btn primary';go.textContent='开始 ▸';
+  go.onclick=()=>{closeModal();if(onStart)onStart();};
+  act.appendChild(go);box.appendChild(act);
+}
+function showHelp(id){
+  const lv=LEVELS.find(l=>l.id===id);if(!lv)return;
+  openModal({title:'❓ '+lv.name+' · 玩法与计分',html:tutHTML(id),actions:[{label:'知道了',cls:'primary',onClick:closeModal}]});
+}
+
+/* ---------------- 首页 ---------------- */
+function unlocked(i){return i===0||!!S.done[LEVELS[i-1].id];}
+function renderHome(){
+  const set=(id,v)=>{const el=$('#'+id);if(el)el.textContent=v;};
+  set('stSeen',S.seen.length);
+  set('stWrong',S.wrong.length);
+  set('stDone',LEVELS.filter(l=>S.done[l.id]).length);
+  set('stTotal',S.total);
+  set('stPlays',S.plays);
+  set('stBest',S.runs.length?Math.max.apply(null,S.runs.map(r=>r.score)):0);
+  $('#rankBadge').textContent=RANKS[clamp(S.rank,0,5)];
+  paintScore();
+  const grid=$('#levelGrid');grid.innerHTML='';
+  LEVELS.forEach((l,i)=>{
+    const d=document.createElement('div');
+    d.className='lvcard'+(unlocked(i)?'':' locked');
+    d.innerHTML='<div class="no">LEVEL '+l.no+'</div><div class="tt">'+l.name+'</div><div class="ds">'+l.desc+'</div>'+
+      '<div class="ft"><span>'+l.sub+'</span><span class="rk">'+RANKS[l.rk]+'</span></div>'+
+      (S.done[l.id]?'<div class="badge-done">已通关</div>':(unlocked(i)?'':'<div class="lock">🔒 先过上一关</div>'));
+    d.onclick=()=>{
+      if(!unlocked(i)){toast('先通过第 '+i+' 关，才能解锁这一关。','bad');return;}
+      goLevel(l.id);
+    };
+    grid.appendChild(d);
+  });
+  const list=$('#runList');if(!list)return;
+  if(!S.runs.length){list.innerHTML='<p class="note">还没有记录。完成任意一关就会生成一条成绩。</p>';return;}
+  list.innerHTML='<table class="runtable"><thead><tr><th>时间</th><th>关卡</th><th>得分</th><th>结果</th></tr></thead><tbody>'+
+    S.runs.slice(0,6).map(r=>'<tr><td>'+r.t+'</td><td>'+r.name+'</td><td class="sc">'+r.score+'</td><td>'+(r.win?'✅ 通关':'—')+'</td></tr>').join('')+
+    '</tbody></table>';
+}
+
+/* ---------------- 开场介绍 ---------------- */
+function showIntro(){
+  const rows=[['认星台','配对 +4 / 配错 −3','通关 +40'],['分辨率分拣','分对 +6 / 分错 −4','通关 +40'],['轨道与重访','答对 +10 / 答错 −5','通关 +60'],
+    ['波段连连看','连对 +6 / 连错 −5','通关 +40'],['赛车竞速','检查站 +15 / 答错 −6 / 撞路障 −8','冲线 +60'],['马里奥闯关','金币 +2 / 顶砖 +5 / 蘑菇 +5 / 答错 −8','通关 +80']];
+  openModal({
+    title:'🚀 开始之前：怎么玩、怎么算分',
+    html:'<p style="font-size:14px">六关从“认星”走到“出方案”。每关开始都会再给一张玩法卡，右上角随时能打开同一份说明。</p>'+
+      '<div class="introGrid"><div><h4>操作</h4><ul><li>翻卡、拖拽、连线：鼠标或手指</li><li>赛车：↑/W 油门，↓/S 刹车，←/A 倒车，空格跳</li><li>闯关：←/→ 走动，空格跳（可连跳 3 次），J 开枪</li><li>各种操作都不按就停住，车和人不会自己跑</li></ul></div>'+
+      '<div><h4>计分</h4><ul><li>答对加分、答错扣分，分数允许为负</li><li>生命或错误次数用尽，自动进入下一关</li><li>每次进关都记一条成绩，累计总分保存在本机</li></ul></div></div>'+
+      '<table class="manualtable" style="margin-top:12px"><thead><tr><th>关卡</th><th>得分</th><th>通关奖励</th></tr></thead><tbody>'+
+      rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('')+'</tbody></table>'+
+      '<p class="note" style="margin-top:10px">总分会记在本机浏览器里（换电脑或清缓存会清零），课堂上按首页“累计总分”登记，可作为平时分依据。</p>',
+    actions:[{label:'开始闯关',cls:'primary',onClick:()=>{closeModal();}}]
+  });
+}
+
+/* ---------------- 导航 ---------------- */
+let currentLevel=null;
+function goLevel(id){
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  const sc=$('#'+id);if(!sc)return;
+  sc.classList.add('active');
+  currentLevel=id;
+  sc.scrollTop=0;
+  window.scrollTo(0,0);
+  if(id==='lv1'&&window.L1) L1.start();
+  if(id==='lv2'&&window.L2) L2.start();
+  if(id==='lv3'&&window.L3) L3.start();
+  if(id==='lv4'&&window.L4) L4.start();
+  if(id==='lv5'&&window.L5) L5.start();
+  if(id==='lv6'&&window.L6) L6.start();
+  if(TUT[id])showTutorial(id);
+}
+function goHome(){
+  if(window.L5)L5.stop();
+  if(window.L6)L6.stop();
+  if(RUN.active)finishRun(false);
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  $('#home').classList.add('active');
+  currentLevel=null;
+  renderHome();
+}
+function completeLevel(id,rank){
+  const lv=LEVELS.find(l=>l.id===id);
+  const first=!S.done[id];
+  if(first){
+    S.done[id]=true;
+    S.rank=Math.max(S.rank,rank!==undefined?rank:lv.rk);
+    save();
+  }
+  const rec=finishRun(true);
+  if(first){toast('🏅 通关：'+lv.name+'　段位晋升「'+RANKS[S.rank]+'」','gold');}
+  else{toast('✓ 再次通关：'+lv.name,'good');}
+  renderHome();
+  return rec;
+}
+$$('[data-home]').forEach(b=>b.onclick=goHome);
+
+/* 每关标题栏注入“帮助”按钮 */
+LEVELS.forEach(l=>{
+  const head=$('#'+l.id+' .lvhead');
+  if(!head)return;
+  const b=document.createElement('button');
+  b.className='btn small helpbtn';b.textContent='? 玩法';
+  b.onclick=()=>showHelp(l.id);
+  head.appendChild(b);
+});
+
+/* ---------------- 复习舱 ---------------- */
+function reviewSession(items,onDone){
+  let idx=0,ok=0;
+  const box=openModal({title:'🗂 错题复习舱 · 先过这一关',closable:true,html:''});
+  const body=$('.mbody',box);
+  function step(){
+    if(idx>=items.length){
+      body.innerHTML='<div style="text-align:center;padding:18px"><div style="font-size:42px">✅</div><p style="margin-top:10px">复习完成，答对 '+ok+' / '+items.length+' 题。</p><p class="note">答对的题已移出错题舱。</p></div>';
+      const act=document.createElement('div');act.className='mactions';
+      const b=document.createElement('button');b.className='btn primary';b.textContent='进入关卡';
+      b.onclick=()=>{closeModal();if(onDone)onDone();};
+      act.appendChild(b);box.appendChild(act);
+      return;
+    }
+    const q=items[idx];
+    body.innerHTML='<div class="qtop"><span>第 '+(idx+1)+' / '+items.length+' 题</span><span>来自：'+q.src+'</span></div>'+
+      '<div class="qtext">'+q.q+'</div>';
+    let picked=[];
+    const {wrap}=buildOptions(q,sel=>{
+      picked=sel;
+      if(sel.length===q.a.length&&q.a.length===1)submit();
+    });
+    const ans=q.a;
+    body.appendChild(wrap);
+    const fb=document.createElement('div');body.appendChild(fb);
+    const act=document.createElement('div');act.className='mactions';body.appendChild(act);
+    const btn=document.createElement('button');btn.className='btn primary';btn.textContent=q.a.length>1?'提交答案':'请选择';
+    btn.disabled=q.a.length>1;
+    act.appendChild(btn);
+    if(q.a.length>1){btn.disabled=false;btn.textContent='提交答案';}
+    function submit(){
+      if(!picked.length)return;
+      const okNow=picked.length===ans.length&&picked.every(v=>ans.includes(v));
+      markOptions(wrap,ans,picked);
+      $$('.opt',wrap).forEach(o=>o.onclick=null);
+      fb.innerHTML=feedbackHTML(q,okNow);
+      btn.style.display='none';
+      const next=document.createElement('button');next.className='btn primary';next.textContent='下一题';
+      next.onclick=()=>{idx++;step();};
+      if(okNow){removeWrong(q);ok++;}
+      act.appendChild(next);
+    }
+    btn.onclick=submit;
+  }
+  step();
+}
+function startReview(manual){
+  if(!S.wrong.length){toast('错题舱是空的，先去闯关吧。','good');return;}
+  const items=pickN(S.wrong,3);
+  reviewSession(items,()=>{renderHome();});
+}
+
+/* ---------------- 卫星库 ---------------- */
+function openLibrary(){
+  const unlockedLib=S.done['lv1'];
+  const seenSet=new Set(S.seen);
+  const list=document.createElement('div');list.className='liblist';
+  L1_PAIRS.forEach(p=>{
+    const it=document.createElement('div');
+    const unseen=!seenSet.has(p.n);
+    it.className='libitem'+(unseen?' unseen':'');
+    it.innerHTML='<div class="n">'+(p.c?'🇨🇳 ':'')+p.n+'</div><div class="d">'+p.d+'</div>'+(p.a?'<div class="a">🏆 '+p.a+'</div>':'');
+    list.appendChild(it);
+  });
+  openModal({
+    title:'🛰 完整卫星库'+(unlockedLib?'':'（未解锁）'),
+    html:unlockedLib?'<p class="note">共 '+L1_PAIRS.length+' 颗，灰底是还没在翻卡里见过的。</p>':'<p class="note">通过第 1 关后解锁完整面板。当前仅显示图鉴预览。</p>',
+    node:list,
+    actions:[{label:'关闭',cls:'primary',onClick:closeModal}]
+  });
+}
+
+/* ---------------- 教师模式（口令） ---------------- */
+const TEACHER_USER=['czulhq','18715225702'];
+const TEACHER_PASS='lhq4243522363';
+const TEACHER_FLAG='orbit-teacher-ok';
+function teacherUnlocked(){try{return sessionStorage.getItem(TEACHER_FLAG)==='1';}catch(e){return false;}}
+function setTeacherUnlocked(){try{sessionStorage.setItem(TEACHER_FLAG,'1');}catch(e){}}
+function answersHTML(){
+  const sec=(t,arr)=>'<h3 style="margin:14px 0 6px;font-size:14px;color:#35e0d1">'+t+'</h3>'+
+    arr.map((q,i)=>{
+      const keys='ABCDEFGH';
+      return '<div style="padding:6px 0;border-bottom:1px dashed rgba(42,87,135,.4);font-size:12px;line-height:1.6">'+
+        '<b>'+(i+1)+'.</b> '+q.q+'<br><span style="color:#ffd166">答案：'+q.a.map(a=>keys[a]).join('、')+'　'+
+        q.a.map(a=>q.o[a]).join(' / ')+'</span><br><span style="color:#93b0cc">'+q.e+'</span></div>';
+    }).join('');
+  return sec('第 3 关 · 轨道与重访（'+L3_POOL.length+' 题）',L3_POOL)+
+    sec('第 5 关 · 赛车选星（'+L5_POOL.length+' 题）',L5_POOL)+
+    sec('第 6 关 · 综合障碍（'+L6_POOL.length+' 题）',L6_POOL)+
+    sec('第 6 关 · Boss 三问',L6_BOSS.qs);
+}
+function openAnswers(){
+  openModal({title:'📚 全部题库与答案解析（教师用）',html:answersHTML(),actions:[{label:'关闭',cls:'primary',onClick:closeModal}]});
+}
+function runsHTML(){
+  if(!S.runs.length)return '<p class="note">本机还没有成绩记录。</p>';
+  return '<p class="note">累计总分 <b style="color:#ffd166">'+S.total+'</b> 分，共闯关 '+S.plays+' 次，最高单次 '+
+    Math.max.apply(null,S.runs.map(r=>r.score))+' 分。</p>'+
+    '<table class="runtable" style="margin-top:8px"><thead><tr><th>时间</th><th>关卡</th><th>得分</th><th>答对 / 答错</th><th>结果</th></tr></thead><tbody>'+
+    S.runs.slice(0,30).map(r=>'<tr><td>'+r.t+'</td><td>'+r.name+'</td><td class="sc">'+r.score+'</td><td>'+
+      (r.ok||0)+' / '+(r.bad||0)+'</td><td>'+(r.win?'✅':'—')+'</td></tr>').join('')+'</tbody></table>';
+}
+function teacherPanel(){
+  const box=openModal({title:'🧑‍🏫 教师模式',html:'<p class="note">课堂演示用：直接跳关、看答案解析、查成绩单。修改立即生效。</p>'});
+  const body=$('.mbody',box);
+  const g=document.createElement('div');g.className='tgrid';g.style.marginTop='12px';
+  LEVELS.forEach(l=>{
+    const b=document.createElement('button');b.className='btn';b.textContent='跳到 '+l.no+' '+l.name;
+    b.onclick=()=>{closeModal();if(RUN.active)finishRun(false);goLevel(l.id);};
+    g.appendChild(b);
+  });
+  body.appendChild(g);
+  const g2=document.createElement('div');g2.className='tgrid';g2.style.marginTop='10px';
+  const mk=(label,fn,cls)=>{const b=document.createElement('button');b.className='btn '+(cls||'');b.textContent=label;b.onclick=fn;g2.appendChild(b);};
+  mk('成绩单 / 累计总分',()=>openModal({title:'📊 成绩记录',html:runsHTML(),actions:[{label:'关闭',cls:'primary',onClick:closeModal}]}));
+  mk('显示全部答案解析',openAnswers);
+  mk('全部关卡标记通关',()=>{LEVELS.forEach(l=>S.done[l.id]=true);S.rank=5;save();renderHome();toast('已标记全部通关（教师演示用）','gold');closeModal();});
+  mk('清空错题舱',()=>{S.wrong=[];save();renderHome();toast('错题舱已清空','good');closeModal();});
+  mk('清空成绩记录',()=>{openModal({title:'清空成绩记录？',html:'<p>累计总分和每条成绩都会删除，不可恢复。</p>',actions:[{label:'取消',onClick:closeModal},{label:'确认清空',cls:'warn',onClick:()=>{S.runs=[];S.plays=0;S.total=0;save();renderHome();closeModal();toast('成绩记录已清空','bad');}}]});},'warn');
+  mk('重置全部进度',()=>{S=freshSave();save();renderHome();toast('进度已重置','bad');closeModal();},'warn');
+  body.appendChild(g2);
+}
+function openTeacher(){
+  if(teacherUnlocked()){teacherPanel();return;}
+  const box=openModal({title:'🧑‍🏫 教师模式 · 身份验证',closable:true});
+  const body=$('.mbody',box);
+  body.innerHTML='<p class="note">教师模式可跳关、看答案解析、导出成绩单，需要口令进入。</p>'+
+    '<div class="loginform">'+
+      '<label>账号<input id="tUser" autocomplete="off" placeholder="请输入用户名或手机号"></label>'+
+      '<label>密码<span class="pwwrap"><input id="tPass" type="password" autocomplete="off" placeholder="请输入密码"><button type="button" class="eye" id="tEye" aria-label="显示密码">👁</button></span></label>'+
+      '<p class="loginerr" id="tErr"></p>'+
+      '<p class="note">口令只保存在本机页面里，用于防止学生误开演示功能。</p>'+
+    '</div>';
+  const act=document.createElement('div');act.className='mactions';body.appendChild(act);
+  const sub=document.createElement('button');sub.className='btn primary';sub.textContent='验证并进入';
+  const check=()=>{
+    const u=($('#tUser').value||'').trim(),p=($('#tPass').value||'').trim();
+    if(TEACHER_USER.includes(u)&&p===TEACHER_PASS){setTeacherUnlocked();closeModal();toast('已验证，教师模式已开启','good');teacherPanel();}
+    else{
+      const e=$('#tErr');e.textContent='账号或密码不正确，请核对后重试。';
+      $('#tUser').classList.add('shakeit');$('#tPass').classList.add('shakeit');
+      setTimeout(()=>{$('#tUser').classList.remove('shakeit');$('#tPass').classList.remove('shakeit');},320);
+    }
+  };
+  sub.onclick=check;
+  const eye=$('#tEye');
+  if(eye)eye.onclick=()=>{
+    const p=$('#tPass');
+    const show=p.type==='password';
+    p.type=show?'text':'password';
+    eye.textContent=show?'🙈':'👁';
+    eye.classList.toggle('on',show);
+    p.focus();
+  };
+  ['tUser','tPass'].forEach(id=>{const el=$('#'+id);if(el)el.addEventListener('keydown',ev=>{if(ev.key==='Enter')check();});});
+  act.appendChild(sub);
+  setTimeout(()=>{const el=$('#tUser');if(el)el.focus();},80);
+}
+
+/* ---------------- 顶栏按钮 ---------------- */
+function openHelpPage(){
+  if(window.L5)L5.stop();
+  if(window.L6)L6.stop();
+  if(RUN.active)finishRun(false);
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  const h=$('#help');if(h)h.classList.add('active');
+  currentLevel=null;
+  window.scrollTo(0,0);
+}
+$('#btnLib').onclick=openLibrary;
+$('#btnHelp').onclick=openHelpPage;
+$('#btnHelpHome').onclick=openHelpPage;
+const libBtn2=$('#btnLib2');if(libBtn2)libBtn2.onclick=openLibrary;
+$('#btnReview').onclick=()=>startReview(true);
+$('#btnTeacher').onclick=openTeacher;
+$('#btnReset').onclick=()=>{
+  openModal({
+    title:'重置进度？',
+    html:'<p>段位、通关记录、错题舱、图鉴、累计总分都会清空，且不可恢复。</p>',
+    actions:[
+      {label:'取消',onClick:closeModal},
+      {label:'确认重置',cls:'warn',onClick:()=>{S=freshSave();save();renderHome();closeModal();toast('已重置','bad');}}
+    ]
+  });
+};
+
+/* ---------------- 启动 ---------------- */
+window.addEventListener('beforeunload',()=>{if(RUN.active)finishRun(false);});
+resetMan();
+renderHome();
+if(!/[?&]lv=/.test(location.search))setTimeout(showIntro,140);
+
+/* ============================================================
+   第 1 关 · 认星台（记忆翻卡）
+   ============================================================ */
+const L1=(function(){
+  let pairs=[],cards=[],flipped=[],matched=0,streak=0,round=1,lock=false,shownAch={},misses=0,ended=false;
+  let revealT=0,revealLeft=0;
+
+  const grid=$('#mGrid'), hintEl=$('#l1hint'), roundEl=$('#l1round'),
+        poolEl=$('#l1pool'), pairsEl=$('#l1pairs'), manualBtn=$('#l1manual'), manTimer=$('#l1manTimer');
+
+  function currentPool(){
+    const core=L1_PAIRS.filter(p=>p.t===1);
+    const ext=L1_PAIRS.filter(p=>p.t===0);
+    if(S.rank>=2&&ext.length){
+      const n=Math.min(ext.length,2+rnd(2));
+      return {core,ext,extN:n};
+    }
+    return {core,ext,extN:0};
+  }
+  function deal(){
+    stopReveal();
+    const n=round===1?8:10;
+    const {core,ext,extN}=currentPool();
+    let chosen=[];
+    if(extN>0){
+      chosen=pickN(ext,extN).concat(pickN(core,n-extN));
+      poolEl.textContent='核心 + 扩展（'+extN+' 张）';
+    }else{
+      chosen=pickN(core,n);
+      poolEl.textContent='核心池';
+    }
+    pairs=chosen;
+    pairsEl.textContent=chosen.length;
+    roundEl.textContent='第 '+round+' / 2 轮';
+    cards=shuffle(chosen.flatMap((p,pid)=>[
+      {pid,kind:'name',text:p.n},
+      {pid,kind:'detail',text:p.d}
+    ]));
+    flipped=[];matched=0;lock=false;shownAch={};
+    render();
+    hintEl.textContent='翻开两张卡，把卫星名和它的参数配成一对。';
+    refreshManualBtns();
+    $$('.bulb').forEach((b,i)=>{b.classList.toggle('on',i<streak);});
+  }
+  function render(){
+    grid.innerHTML='';
+    const total=cards.length;
+    const cols=(window.innerWidth<760)?4:(total<=16?8:10);
+    grid.style.gridTemplateColumns='repeat('+cols+',minmax(0,150px))';
+    grid.style.justifyContent='center';
+    cards.forEach((c,idx)=>{
+      const p=pairs[c.pid];
+      const el=document.createElement('div');el.className='mcard';el.dataset.i=idx;
+      const inner=document.createElement('div');inner.className='mcard-inner';
+      const front=document.createElement('div');front.className='face front';
+      front.innerHTML='<div class="q">?</div><div class="tip">SATELLITE</div>';
+      const back=document.createElement('div');back.className='face back '+(c.kind==='name'?'name':'detail');
+      if(c.kind==='name'){
+        back.innerHTML=(p.c?'<div class="cn">国产</div>':'')+'<div class="nm">'+c.text+'</div>';
+      }else{
+        back.innerHTML='<div class="dt">'+c.text+'</div>';
+      }
+      inner.appendChild(front);inner.appendChild(back);el.appendChild(inner);
+      el.onclick=()=>flip(idx);
+      grid.appendChild(el);
+    });
+  }
+  function flip(idx){
+    if(lock||ended)return;
+    const c=cards[idx];const el=grid.children[idx];
+    if(!c||el.classList.contains('flip')||el.classList.contains('matched'))return;
+    el.classList.add('flip');
+    if(c.kind==='name'&&!S.seen.includes(c.text)){S.seen.push(c.text);save();}
+    flipped.push(idx);
+    if(flipped.length===2){
+      const [a,b]=flipped;
+      const pa=cards[a],pb=cards[b];
+      if(pa.pid===pb.pid&&pa.kind!==pb.kind){
+        matched++;
+        $$('.mcard').forEach((n,i)=>{if(i===a||i===b)n.classList.add('matched');});
+        const p=pairs[pa.pid];
+        addScore(SCORE.l1pair);
+        if(p.a&&!shownAch[pa.pid]){shownAch[pa.pid]=1;toast('🏆 '+p.a,'gold');}
+        flipped=[];
+        hintEl.textContent='已配对 '+matched+' / '+pairs.length+'　本关 '+RUN.score+' 分';
+        if(matched===pairs.length)setTimeout(roundDone,520);
+      }else{
+        lock=true;
+        addScore(SCORE.l1miss);
+        misses++;
+        if(misses>=6&&!ended){
+          ended=true;
+          setTimeout(()=>{stopReveal();toast('配对错满 6 次，第 1 关结束','bad');autoAdvance('lv1','配对错满 6 次，自动进入第 2 关');},700);
+        }
+        grid.children[a].classList.add('wrong');grid.children[b].classList.add('wrong');
+        setTimeout(()=>{
+          grid.children[a].classList.remove('flip','wrong');
+          grid.children[b].classList.remove('flip','wrong');
+          flipped=[];lock=false;
+        },820);
+      }
+    }
+  }
+  function roundDone(){
+    streak++;
+    $$('.bulb').forEach((b,i)=>{b.classList.toggle('on',i<streak);});
+    if(streak>=2){
+      addScore(SCORE.l1clear);
+      const rec=completeLevel('lv1',0);
+      openModal({
+        title:'🎉 第 1 关通关 · 见习观察员',
+        html:'<div style="font-size:44px;text-align:center">🛰️</div><p style="text-align:center;margin-top:8px">连续两轮全部配对成功。本关得分 <b style="color:#ffd166">'+(rec?rec.score:0)+'</b> 分（含通关奖励 '+SCORE.l1clear+' 分）。</p>'+
+          '<p class="note" style="margin-top:10px">已解锁<b>完整卫星库</b>（顶栏「卫星库」可查全部 '+L1_PAIRS.length+' 颗卫星）。</p>',
+        actions:[{label:'去第 2 关',cls:'primary',onClick:()=>{closeModal();goLevel('lv2');}},{label:'再玩一轮',onClick:()=>{closeModal();start();}}]
+      });
+    }else{
+      toast('✓ 第 1 轮全部配对，再来一轮就能通关','good');
+      round=2;setTimeout(deal,600);
+    }
+  }
+  function stopReveal(){
+    if(revealT){clearInterval(revealT);revealT=0;}
+    if(manTimer)manTimer.style.display='none';
+    $$('.mcard').forEach((n,i)=>{
+      if(n.classList.contains('matched'))return;
+      if(cards[i]&&flipped.includes(i))return;
+      n.classList.remove('flip');
+    });
+    flipped=[];lock=false;
+  }
+  function useManual(){
+    if((MAN.lv1||0)<=0){toast('本关手册次数用完了','bad');return;}
+    MAN.lv1--;refreshManualBtns();
+    lock=true;
+    $$('.mcard').forEach((n,i)=>{if(!n.classList.contains('matched'))n.classList.add('flip');});
+    revealLeft=30;
+    manTimer.style.display='inline-block';
+    manTimer.textContent='📖 记忆时间 30 秒';
+    toast('手册生效：30 秒看清所有未配对卡面，可提前关闭','good');
+    clearInterval(revealT);
+    revealT=setInterval(()=>{
+      revealLeft--;
+      manTimer.textContent='📖 记忆时间 '+Math.max(0,revealLeft)+' 秒';
+      if(revealLeft<=0){clearInterval(revealT);revealT=0;stopReveal();toast('时间到，卡面翻回','bad');}
+    },1000);
+  }
+  function start(){
+    startRun('lv1');
+    streak=0;round=1;misses=0;ended=false;
+    MAN.lv1=2;refreshManualBtns();
+    $$('.bulb').forEach(b=>b.classList.remove('on'));
+    deal();
+  }
+  manualBtn.onclick=useManual;
+  manTimer.onclick=()=>{if(revealT){clearInterval(revealT);revealT=0;stopReveal();toast('已提前结束记忆','good');}};
+  return {start,deal};
+})();
+window.L1=L1;
+
+/* ============================================================
+   第 2 关 · 分辨率分拣站（拖拽 + 掉落）
+   ============================================================ */
+const L2=(function(){
+  const arena=$('#arena'), layer=$('#fallLayer'), binsEl=$('#bins');
+  const okEl=$('#l2ok'), lifeEl=$('#l2life');
+  let queue=[], cards=[], ok=0, lives=3, running=false, raf=0, last=0, spawnClock=0, manual=1, ended=false, paused=false;
+  const CARD_W=132, CARD_H=44;
+
+  function buildBins(){
+    binsEl.innerHTML='';
+    L2_TIERS.forEach((t,i)=>{
+      const d=document.createElement('div');d.className='bin';d.dataset.tier=i;
+      d.innerHTML='<div class="t">'+t.t+'</div><div class="r">'+t.r+'</div>';
+      binsEl.appendChild(d);
+    });
+  }
+  function refillQueue(){
+    queue=shuffle(L2_POOL);
+    if(lives<2){ // 生命吃紧时多给十米/百米这类常见档，降低挫败
+      queue=queue.sort((a,b)=>(a.tier===2?0:1)-(b.tier===2?0:1));
+    }
+  }
+  function start(){
+    startRun('lv2');
+    buildBins();
+    cards.forEach(c=>c.el.remove());cards=[];
+    ok=0;lives=3;ended=false;paused=false;spawnClock=0;
+    MAN.lv2=2;refreshManualBtns();
+    refillQueue();
+    okEl.textContent='0';lifeEl.textContent='❤❤❤';
+    running=true;last=0;
+    cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  }
+  function spawn(){
+    if(cards.length>=3||queue.length===0&&cards.length>0)return;
+    if(!queue.length)refillQueue();
+    const item=queue.pop();
+    const el=document.createElement('div');el.className='fallcard';el.textContent=item.n;
+    const x=Math.max(8,Math.min(arena.clientWidth-CARD_W-8,Math.random()*(arena.clientWidth-CARD_W)));
+    const c={el,item,x,y:-CARD_H-4,vy:0,drag:false,done:false};
+    el.style.left=x+'px';el.style.top=c.y+'px';
+    layer.appendChild(el);cards.push(c);
+    bindDrag(c);
+  }
+  function bindDrag(c){
+    const el=c.el;let ox=0,oy=0,dragging=false;
+    el.addEventListener('pointerdown',e=>{
+      if(ended)return;
+      dragging=true;c.drag=true;el.classList.add('drag');
+      el.setPointerCapture(e.pointerId);
+      const r=layer.getBoundingClientRect();
+      ox=e.clientX-r.left-c.x;oy=e.clientY-r.top-c.y;
+      e.preventDefault();
+    });
+    el.addEventListener('pointermove',e=>{
+      if(!dragging)return;
+      const r=layer.getBoundingClientRect();
+      c.x=clamp(e.clientX-r.left-ox,0,r.width-CARD_W);
+      c.y=clamp(e.clientY-r.top-oy,0,r.height-CARD_H);
+      el.style.left=c.x+'px';el.style.top=c.y+'px';
+      highlightBin(e.clientX,e.clientY);
+    });
+    el.addEventListener('pointerup',e=>{
+      if(!dragging)return;
+      dragging=false;c.drag=false;el.classList.remove('drag');
+      $$('.bin',binsEl).forEach(b=>b.classList.remove('hot'));
+      drop(c,e.clientX,e.clientY);
+    });
+    el.addEventListener('pointercancel',()=>{dragging=false;c.drag=false;el.classList.remove('drag');});
+  }
+  function binUnder(cx,cy){
+    return $$('.bin',binsEl).find(b=>{
+      const r=b.getBoundingClientRect();
+      return cx>=r.left-6&&cx<=r.right+6&&cy>=r.top-6&&cy<=r.bottom+6;
+    });
+  }
+  function highlightBin(cx,cy){
+    const b=binUnder(cx,cy);
+    $$('.bin',binsEl).forEach(x=>x.classList.toggle('hot',x===b));
+  }
+  function drop(c,cx,cy){
+    const bin=binUnder(cx,cy);
+    if(!bin){ // 没放到箱子里，继续掉
+      c.y=Math.max(0,c.y);return;
+    }
+    const tier=Number(bin.dataset.tier);
+    if(tier===c.item.tier){
+      bin.classList.add('ok');setTimeout(()=>bin.classList.remove('ok'),350);
+      ok++;okEl.textContent=ok;
+      addScore(SCORE.l2ok);
+      c.done=true;c.el.remove();cards=cards.filter(x=>x!==c);
+      toast('✓ '+c.item.n+' → '+L2_TIERS[tier].t+'　+'+SCORE.l2ok,'good');
+      if(ok>=15)finish(true);
+    }else{
+      bin.classList.add('bad');setTimeout(()=>bin.classList.remove('bad'),450);
+      lives--;updateLife();
+      addScore(SCORE.l2bad);
+      c.done=true;c.el.remove();cards=cards.filter(x=>x!==c);
+      queue.push(c.item);
+      pushWrong({q:c.item.n+' 的空间分辨率属于哪一档？',o:L2_TIERS.map(t=>t.t),a:[c.item.tier],e:c.item.e},'第 2 关 · 分辨率');
+      if(lives<=0){finish(false);}
+      else{showExplain(c.item,tier);}
+    }
+  }
+  function updateLife(){lifeEl.textContent='❤'.repeat(Math.max(0,lives))+'♡'.repeat(Math.max(0,3-lives));}
+  function showExplain(item,userTier){
+    paused=true;
+    openModal({
+      title:'分辨率分拣 × 解析',
+      html:'<div class="qtext">'+item.n+'　你放进了「'+L2_TIERS[userTier].t+'」</div>'+
+        '<div class="explain bad"><b>正确答案：'+L2_TIERS[item.tier].t+'</b><br>'+item.e+'</div>'+
+        (item.c?'<div class="achievement">🇨🇳 国产卫星，记牢它的分辨率档。</div>':''),
+      actions:[{label:'继续分拣',cls:'primary',onClick:()=>{closeModal();paused=false;last=0;}}]
+    });
+  }
+  function finish(win){
+    ended=true;running=false;cancelAnimationFrame(raf);
+    cards.forEach(c=>c.el.remove());cards=[];
+    paused=false;closeModal();
+    if(win){
+      addScore(SCORE.l2clear);
+      const rec=completeLevel('lv2',1);
+      openModal({
+        title:'🎉 第 2 关通关 · 波段解析员',
+        html:'<div style="font-size:44px;text-align:center">📦</div><p style="text-align:center;margin-top:8px">正确分拣 15 张，还剩 '+lives+' 点生命。本关得分 <b style="color:#ffd166">'+(rec?rec.score:0)+'</b> 分。</p><p class="note" style="margin-top:10px">下一关：为什么有的卫星 16 天回来一次，有的每天都有？</p>',
+        actions:[{label:'去第 3 关',cls:'primary',onClick:()=>{closeModal();goLevel('lv3');}},{label:'再玩一次',onClick:()=>{closeModal();start();}}]
+      });
+    }else{
+      autoAdvance('lv2','生命耗尽，自动进入第 3 关');
+    }
+  }
+  function loop(ts){
+    if(!running)return;
+    if(!last)last=ts;
+    const dt=Math.min(40,ts-last);last=ts;
+    if(!paused&&!ended){
+      spawnClock+=dt;
+      const interval=Math.max(1150,2200-ok*70);
+      if(spawnClock>interval){spawnClock=0;spawn();}
+      const speed=44+ok*3.4;
+      cards.forEach(c=>{
+        if(c.drag||c.done)return;
+        c.y+=speed*dt/1000;
+        c.el.style.top=c.y+'px';
+        if(c.y>arena.clientHeight-10){
+          c.done=true;c.el.remove();cards=cards.filter(x=>x!==c);
+          queue.push(c.item);
+          toast('卡片掉出去了，稍后会再出现','bad');
+        }
+      });
+    }
+    raf=requestAnimationFrame(loop);
+  }
+  function useManual(){
+    if(ended)return;
+    paused=true;
+    const html='<table class="manualtable"><thead><tr><th>档位</th><th>范围</th><th>典型卫星</th></tr></thead><tbody>'+
+      '<tr><td>亚米级</td><td>&lt; 1 m</td><td>WorldView-3 0.31、GF-2 0.8、GF-7 0.65</td></tr>'+
+      '<tr><td>米级</td><td>1—10 m</td><td>SPOT-6 1.5、ZY-3 2.1、GF-1 PMS 2、Planet 3</td></tr>'+
+      '<tr><td>十米级</td><td>10—100 m</td><td>Sentinel-2 10、GF-6 WFV 16、Landsat 30</td></tr>'+
+      '<tr><td>百米级</td><td>100—1000 m</td><td>OLCI 300、MERIS 300、HY-1C CZI 50、GOCI 250</td></tr>'+
+      '<tr><td>千米级</td><td>≥ 1 km</td><td>MODIS 250—1000、AVHRR 1000、FY-4A 500—4000</td></tr>'+
+      '</tbody></table>';
+    const ok=manualSheet('lv2',html,()=>{paused=false;last=0;if(running&&!raf)raf=requestAnimationFrame(loop);});
+    if(!ok){paused=false;}
+  }
+  $('#l2manual').onclick=useManual;
+  return {start,stop(){running=false;cancelAnimationFrame(raf);} ,get ok(){return ok;}};
+})();
+window.L2=L2;
+
+/* ============================================================
+   第 3 关 · 轨道与重访（单选）
+   ============================================================ */
+const L3=(function(){
+  const area=$('#l3area'), okEl=$('#l3ok'), lifeEl=$('#l3life');
+  let qs=[],idx=0,ok=0,lives=3,answered=false,ended=false;
+
+  function start(){
+    startRun('lv3');
+    qs=pickN(L3_POOL,8);idx=0;ok=0;lives=3;answered=false;ended=false;
+    okEl.textContent='0';updateLife();render();
+  }
+  function updateLife(){lifeEl.textContent='❤'.repeat(Math.max(0,lives))+'♡'.repeat(Math.max(0,3-lives));}
+  function render(){
+    if(ended)return;
+    const q=qs[idx];
+    area.innerHTML='';
+    const card=document.createElement('div');card.className='quizcard';
+    card.innerHTML='<div class="qtop"><span>第 '+(idx+1)+' / '+qs.length+' 题　本关 '+RUN.score+' 分</span><div class="meter">'+
+      qs.map((_,i)=>'<span class="dot '+(i<idx?'on':'')+'"></span>').join('')+'</div></div>'+
+      '<div class="qtext">'+q.q+'</div>';
+    area.appendChild(card);
+    let picked=[],done=false,sub=null;
+    const {wrap}=buildOptions(q,sel=>{
+      picked=sel;
+      if(q.a.length===1&&sel.length)submit();
+    });
+    card.appendChild(wrap);
+    const fb=document.createElement('div');card.appendChild(fb);
+    const act=document.createElement('div');act.className='mactions';card.appendChild(act);
+    if(q.a.length>1){
+      sub=document.createElement('button');sub.className='btn primary';sub.textContent='提交答案（共 '+q.a.length+' 项）';
+      sub.onclick=submit;act.appendChild(sub);
+    }
+    function submit(){
+      if(done||!picked.length)return;done=true;answered=true;
+      const right=picked.length===q.a.length&&picked.every(v=>q.a.includes(v));
+      markOptions(wrap,q.a,picked);
+      $$('.opt',wrap).forEach(o=>o.onclick=null);
+      fb.innerHTML=feedbackHTML(q,right)+(right?'<div class="explain" style="margin-top:8px">+'+SCORE.l3ok+' 分</div>':'<div class="explain bad" style="margin-top:8px">'+SCORE.l3bad+' 分，生命 −1</div>');
+      if(right){ok++;okEl.textContent=ok;addScore(SCORE.l3ok);}
+      else{lives--;updateLife();addScore(SCORE.l3bad);pushWrong(q,'第 3 关 · 轨道重访');}
+      if(sub)sub.remove();
+      const b=document.createElement('button');b.className='btn primary';
+      b.textContent=(idx>=qs.length-1)?'查看成绩':'下一题';
+      b.onclick=next;
+      act.appendChild(b);
+    }
+  }
+  function next(){
+    if(lives<=0){return finish(false);}
+    idx++;
+    if(idx>=qs.length)return finish(ok>=7);
+    answered=false;render();
+  }
+  function finish(win){
+    ended=true;
+    if(win){
+      addScore(SCORE.l3clear);
+      const rec=completeLevel('lv3',2);
+      openModal({
+        title:'🎉 第 3 关通关 · 选星学徒',
+        html:'<div style="font-size:44px;text-align:center">🛰️</div><p style="text-align:center;margin-top:8px">答对 '+ok+' / 8 题，本关得分 <b style="color:#ffd166">'+(rec?rec.score:0)+'</b> 分。</p><p class="note" style="margin-top:10px">一句话总结：<b>重访 ≈ 轨道回归周期 ÷ 单轨能扫几条</b>，幅宽越大、组网越多，回来得越快；静止轨道不谈重访，只谈扫描间隔。</p>',
+        actions:[{label:'去第 4 关',cls:'primary',onClick:()=>{closeModal();goLevel('lv4');}},{label:'再答一组',onClick:()=>{closeModal();start();}}]
+      });
+    }else{
+      autoAdvance('lv3','生命耗尽，自动进入第 4 关');
+    }
+  }
+  return {start,stop(){ended=true;}};
+})();
+window.L3=L3;
+
+/* ============================================================
+   第 4 关 · 波段效应连连看
+   ============================================================ */
+const L4=(function(){
+  const board=$('#linkBoard'), svg=$('#linkSvg'), colL=$('#colL'), colR=$('#colR');
+  const doneEl=$('#l4done'), streakEl=$('#l4streak');
+  let pairs=[],selLeft=null,solved=[],doneCount=0,errors=0,round=1,streak=0,manual=1,ended=false,used=new Set();
+
+  function start(){
+    startRun('lv4');
+    round=1;streak=0;solved=[];used=new Set();ended=false;errors=0;
+    MAN.lv4=2;refreshManualBtns();
+    deal();
+  }
+  function deal(){
+    let pool=L4_POOL.filter(p=>!used.has(p.l));
+    if(pool.length<6)pool=L4_POOL.slice();
+    pairs=pickN(pool,6);
+    pairs.forEach(p=>used.add(p.l));
+    solved=[];doneCount=0;errors=0;selLeft=null;
+    renderBoard();
+    doneEl.textContent='0';updateStreak();
+  }
+  function updateStreak(){streakEl.textContent='连续 '+streak+'/2';}
+  function renderBoard(){
+    colL.innerHTML='';colR.innerHTML='';
+    svg.innerHTML='';
+    const lefts=shuffle(pairs.map((p,i)=>({t:p.l,i})));
+    const rights=shuffle(pairs.map((p,i)=>({t:p.r,i})));
+    lefts.forEach(o=>{
+      const d=document.createElement('div');d.className='node';d.dataset.pid=o.i;d.dataset.side='L';
+      d.textContent=o.t;d.onclick=()=>pickLeft(d,o.i);colL.appendChild(d);
+    });
+    rights.forEach(o=>{
+      const d=document.createElement('div');d.className='node';d.dataset.pid=o.i;d.dataset.side='R';
+      d.textContent=o.t;d.onclick=()=>pickRight(d,o.i);colR.appendChild(d);
+    });
+    requestAnimationFrame(()=>solved.forEach(s=>drawLine(s.li,s.ri,true)));
+  }
+  function pickLeft(el,pid){
+    if(ended||el.classList.contains('lock'))return;
+    $$('.node',colL).forEach(n=>n.classList.remove('sel'));
+    el.classList.add('sel');selLeft={el,pid};
+  }
+  function pickRight(el,pid){
+    if(ended||el.classList.contains('lock'))return;
+    if(!selLeft){toast('先点左边的一个波段','bad');return;}
+    const L=selLeft,R={el,pid};
+    if(pid===L.pid){
+      L.el.classList.remove('sel');L.el.classList.add('lock');el.classList.add('lock');
+      solved.push({li:L.el,ri:el,pid});drawLine(L.el,el,true);
+      doneCount++;doneEl.textContent=doneCount;
+      addScore(SCORE.l4ok);
+      selLeft=null;
+      toast('✓ '+pairs[pid].l+' ↔ '+pairs[pid].r+'　+'+SCORE.l4ok,'good');
+      if(doneCount>=6)roundDone();
+    }else{
+      errors++;addScore(SCORE.l4bad);
+      if(errors>=5&&!ended){
+        ended=true;
+        toast('错误已满 5 次，第 4 关结束','bad');
+        setTimeout(()=>autoAdvance('lv4','错误满 5 次，自动进入第 5 关'),600);
+      }
+      L.el.classList.add('err');el.classList.add('err');
+      drawLine(L.el,el,false);
+      const p=pairs[pid];
+      toast('✗ 连错了：'+pairs[L.pid].l+' 应对应「'+pairs[L.pid].r+'」　'+SCORE.l4bad,'bad');
+      setTimeout(()=>{
+        $$('.node.err').forEach(n=>n.classList.remove('err'));
+        $$('.node.sel').forEach(n=>n.classList.remove('sel'));
+        $$('line[data-tmp]',svg).forEach(l=>l.remove());
+      },520);
+      selLeft=null;
+      pushWrong({q:'「'+pairs[L.pid].l+'」对应的应用是？',o:[pairs[L.pid].r,'区分云雪与土壤湿度','城市夜光与人口','海面风场'],a:[0],e:pairs[L.pid].e},'第 4 关 · 波段');
+    }
+  }
+  function drawLine(le,re,locked){
+    const br=board.getBoundingClientRect(),lr=le.getBoundingClientRect(),rr=re.getBoundingClientRect();
+    const ns='http://www.w3.org/2000/svg';
+    const line=document.createElementNS(ns,'line');
+    line.setAttribute('x1',lr.right-br.left);
+    line.setAttribute('y1',lr.top-br.top+lr.height/2);
+    line.setAttribute('x2',rr.left-br.left);
+    line.setAttribute('y2',rr.top-br.top+rr.height/2);
+    line.setAttribute('stroke',locked?'#5be08a':'#ff6b6b');
+    line.setAttribute('stroke-width','3');
+    line.setAttribute('stroke-linecap','round');
+    if(!locked)line.setAttribute('data-tmp','1');
+    else line.setAttribute('opacity','.85');
+    svg.appendChild(line);
+  }
+  function roundDone(){
+    if(errors===0){streak++;toast('✓ 本轮 6 组全对，连续 '+streak+' 轮','good');}
+    else{streak=0;toast('本轮有 '+errors+' 次连错，连续计数归零，再来一轮','bad');}
+    updateStreak();
+    if(streak>=2){
+      addScore(SCORE.l4clear);
+      const rec=completeLevel('lv4',3);
+      openModal({
+        title:'🎉 第 4 关通关 · 初级调度员',
+        html:'<div style="font-size:44px;text-align:center">🌈</div><p style="text-align:center;margin-top:8px">连续两轮零错误完成连线，本关得分 <b style="color:#ffd166">'+(rec?rec.score:0)+'</b> 分。</p><p class="note" style="margin-top:10px">记四条主线：红光看植被、红边看胁迫、短波红外看云雪矿物、热红外看温度；雷达看形变与洪涝。</p>',
+        actions:[{label:'去第 5 关',cls:'primary',onClick:()=>{closeModal();goLevel('lv5');}},{label:'再练一轮',onClick:()=>{closeModal();start();}}]
+      });
+    }else{
+      round++;setTimeout(deal,700);
+    }
+  }
+  function useManual(){
+    if(ended)return;
+    const html='<table class="manualtable"><thead><tr><th>波段</th><th>典型应用</th></tr></thead><tbody>'+
+      '<tr><td>红光 0.63—0.68</td><td>叶绿素吸收、NDVI 红通道</td></tr>'+
+      '<tr><td>近红外 0.76—0.90</td><td>植被高反射、生物量</td></tr>'+
+      '<tr><td>红边 0.70—0.74</td><td>叶绿素胁迫、作物长势</td></tr>'+
+      '<tr><td>短波红外 1.6 / 2.2</td><td>云雪判别 / 蚀变矿物</td></tr>'+
+      '<tr><td>热红外 10—12</td><td>地表温度、海温</td></tr>'+
+      '<tr><td>中波红外 3.5—4.1</td><td>高温火点</td></tr>'+
+      '<tr><td>L 波段 SAR</td><td>形变、土壤水分、穿透植被</td></tr>'+
+      '</tbody></table>';
+    manualSheet('lv4',html);
+  }
+  $('#l4manual').onclick=useManual;
+  window.addEventListener('resize',()=>{if(currentLevel==='lv4')requestAnimationFrame(()=>solved.forEach(s=>drawLine(s.li,s.ri,true)));});
+  return {start,stop(){ended=true;}};
+})();
+window.L4=L4;
+
+/* ============================================================
+   第 5 关 · 赛车竞速（Canvas）
+   ============================================================ */
+const L5=(function(){
+  const stage=$('#stage5'), cv=$('#cv5'), g=cv.getContext('2d');
+  const fillEl=$('#l5fill'), cpEl=$('#l5cp'), speedEl=$('#l5speed'), lifeEl=$('#l5life');
+  const carPane=$('#carPane'), carList=$('#carList');
+  const manualBtn=$('#l5manual'), hintBtn=$('#l5hint');
+  const throttleBtn=$('#l5throttle'), brakeBtn=$('#l5brake');
+
+  const CARS=[
+    {n:'朱雀 GT',d:'高分一号 · 宽幅普查',body:'#ff5a3c',body2:'#ffb199',accent:'#ffd166',glow:'rgba(255,90,60,.5)',roof:24,wing:18,wide:1.0},
+    {n:'青龙 X',d:'高分三号 · 全天候雷达',body:'#18d6c4',body2:'#9ff5ea',accent:'#eafffb',glow:'rgba(24,214,196,.5)',roof:21,wing:8,wide:0.96},
+    {n:'玄武 S',d:'风云四号 · 静止凝视',body:'#3f7dff',body2:'#9fc2ff',accent:'#cfe0ff',glow:'rgba(63,125,255,.5)',roof:26,wing:22,wide:1.1},
+    {n:'白虎 R',d:'高分七号 · 立体测图',body:'#f0f4f8',body2:'#c7d6e6',accent:'#ffd166',glow:'rgba(255,255,255,.45)',roof:23,wing:14,wide:1.02}
+  ];
+  const RING_Q=[
+    {q:'GF-2 的 0.8 m 全色影像属于亚米级。',o:['正确','错误'],a:[0],e:'0.8 m 小于 1 m，属于亚米级。'},
+    {q:'MODIS 的空间分辨率是 30 m。',o:['正确','错误'],a:[1],e:'MODIS 是 250—1000 m，30 m 属于 Landsat。'},
+    {q:'静止轨道卫星用“扫描间隔”描述观测频率，不用“重访周期”。',o:['正确','错误'],a:[0],e:'静止轨道相对地面不动，15 分钟全盘就是扫描间隔。'},
+    {q:'Sentinel-2 的 10 m 分辨率比 Landsat 的 30 m 更粗。',o:['正确','错误'],a:[1],e:'数值越小越细，10 m 比 30 m 更精细。'},
+    {q:'SAR 可以在夜间和云雨天气成像。',o:['正确','错误'],a:[0],e:'SAR 主动发射微波，不依赖太阳光，也不怕云。'},
+    {q:'高分六号 WFV 的幅宽约 800 km。',o:['正确','错误'],a:[0],e:'四台 WFV 拼接，幅宽约 800 km，支撑 2 天重访。'}
+  ];
+
+  let W=0,H=0,dpr=1,raf=0,last=0,t0=0;
+  let st=null,running=false,paused=false;
+
+  function fit(){
+    const r=stage.getBoundingClientRect();
+    dpr=Math.min(2,window.devicePixelRatio||1);
+    W=Math.max(320,r.width);H=Math.max(260,r.height);
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    g.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function newState(){
+    const qs=pickN(L5_POOL,6);
+    return {
+      car:0,dist:0,speed:0,maxSpeed:330,finished:false,lives:3,
+      throttle:false,brake:false,reverse:false,
+      jy:0,jvy:0,onGround:true,crashInv:0,
+      cones:[1250,1900,1990,2700,3450,3540,4250,5050,5650,5740,6550,7050,7900,8700,8790].map(d=>({dist:d,hit:false})),
+      gates:[1500,3000,4500,6000,7500,9000].map((d,i)=>({dist:d,q:qs[i],done:false,near:false})),
+      finishDist:9700,
+      quizzes:qs, solved:0,
+      rings:[800,2300,3800,5300,6800,8300].map((d,i)=>({dist:d,got:false,q:RING_Q[i%RING_Q.length]})),
+      items:[{dist:1100,type:'manual',got:false},{dist:2600,type:'hint',got:false}],
+      parts:[],time:0
+    };
+  }
+
+  /* ---------- 车辆绘制 ---------- */
+  function wheel(x,y,r,rot){
+    g.save();g.translate(x,y);
+    g.fillStyle='#0a0f16';g.beginPath();g.arc(0,0,r,0,7);g.fill();
+    g.fillStyle='#1c2b3d';g.beginPath();g.arc(0,0,r*0.78,0,7);g.fill();
+    g.strokeStyle='rgba(180,210,235,.5)';g.lineWidth=1.6;
+    for(let i=0;i<5;i++){const a=rot+i*Math.PI*2/5;g.beginPath();g.moveTo(0,0);g.lineTo(Math.cos(a)*r*0.62,Math.sin(a)*r*0.62);g.stroke();}
+    g.fillStyle='#8fb6d6';g.beginPath();g.arc(0,0,r*0.2,0,7);g.fill();
+    g.restore();
+  }
+  function drawCar(x,y,s,mi,rot,boost){
+    const m=CARS[mi];
+    g.save();g.translate(x,y);g.scale(s*m.wide,s);
+    // 阴影
+    g.fillStyle='rgba(0,0,0,.4)';g.beginPath();g.ellipse(0,13,60,9,0,0,7);g.fill();
+    // 尾焰
+    if(boost>0){
+      const len=22+Math.sin(t0/40)*8+boost*0.25;
+      const grd=g.createLinearGradient(-58,0,-58-len,0);
+      grd.addColorStop(0,'rgba(255,240,170,.95)');grd.addColorStop(.4,'rgba(255,140,60,.85)');grd.addColorStop(1,'rgba(255,60,60,0)');
+      g.fillStyle=grd;g.beginPath();g.moveTo(-56,-6);g.lineTo(-56-len,0);g.lineTo(-56,6);g.closePath();g.fill();
+    }
+    // 车头灯光晕
+    g.fillStyle='rgba(255,240,190,.10)';
+    g.beginPath();g.ellipse(64,-6,20,8,0,0,7);g.fill();
+    // 车身
+    const bodyGrd=g.createLinearGradient(0,-m.roof-8,0,10);
+    bodyGrd.addColorStop(0,m.body2);bodyGrd.addColorStop(.5,m.body);bodyGrd.addColorStop(1,'rgba(0,0,0,.6)');
+    g.fillStyle=bodyGrd;
+    g.beginPath();
+    g.moveTo(-58,8);g.lineTo(-56,-8);g.lineTo(-40,-13);
+    g.lineTo(-22,-15);g.lineTo(-16,-m.roof);g.lineTo(6,-m.roof-3);g.lineTo(24,-20);
+    g.lineTo(44,-15);g.lineTo(56,-11);g.lineTo(60,-3);g.lineTo(60,8);
+    g.closePath();g.fill();
+    // 后轮拱与侧裙
+    g.fillStyle='rgba(0,0,0,.55)';
+    g.beginPath();g.arc(-34,8,17,Math.PI,0);g.fill();
+    g.beginPath();g.arc(34,8,17,Math.PI,0);g.fill();
+    // 高光
+    g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=1.6;
+    g.beginPath();g.moveTo(-46,-9);g.lineTo(-26,-12);g.lineTo(-20,-14);g.stroke();
+    // 座舱
+    const glass=g.createLinearGradient(0,-m.roof,0,-14);
+    glass.addColorStop(0,'rgba(200,238,255,.98)');glass.addColorStop(.55,'rgba(70,120,170,.95)');glass.addColorStop(1,'rgba(25,45,70,.95)');
+    g.fillStyle=glass;
+    g.beginPath();g.moveTo(-13,-m.roof+4);g.lineTo(4,-m.roof+1);g.lineTo(19,-20);g.lineTo(-9,-20);g.closePath();g.fill();
+    g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=1;g.stroke();
+    // 尾翼（贴在车尾箱上）
+    g.fillStyle=m.accent;
+    g.fillRect(-62,-19,26,4);
+    g.fillStyle='rgba(0,0,0,.45)';
+    g.fillRect(-59,-16,3,7);g.fillRect(-46,-16,3,7);
+    // 进气口
+    g.fillStyle='rgba(0,0,0,.45)';g.fillRect(-6,-m.roof+6,14,3);
+    // 车灯
+    g.fillStyle='#fff8d0';g.beginPath();g.ellipse(57,-7,5,3.4,0,0,7);g.fill();
+    g.fillStyle='rgba(255,180,60,.4)';g.beginPath();g.ellipse(61,-7,12,6,0,0,7);g.fill();
+    // 号码
+    g.fillStyle=m.accent;g.globalAlpha=.9;
+    g.beginPath();g.moveTo(24,-18);g.lineTo(38,-18);g.lineTo(38,-13);g.lineTo(24,-13);g.closePath();g.fill();
+    g.globalAlpha=1;
+    // 车轮
+    wheel(-34,8,14,rot);wheel(34,8,15,rot);
+    g.restore();
+  }
+  function drawMini(canvas,mi){
+    const c=canvas.getContext('2d');
+    const w=canvas.width,h=canvas.height;
+    c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);
+    const m=CARS[mi];
+    const cx=w/2, cy=h*0.80, s=1.25*(w/320)*2;
+    c.save();c.translate(cx,cy);c.scale(s,s);
+    c.fillStyle='rgba(0,0,0,.4)';c.beginPath();c.ellipse(0,13,60,9,0,0,7);c.fill();
+    const bg=c.createLinearGradient(0,-m.roof-8,0,10);
+    bg.addColorStop(0,m.body2);bg.addColorStop(.5,m.body);bg.addColorStop(1,'rgba(0,0,0,.6)');
+    c.fillStyle=bg;c.beginPath();
+    c.moveTo(-58,8);c.lineTo(-56,-8);c.lineTo(-40,-13);c.lineTo(-22,-15);c.lineTo(-16,-m.roof);
+    c.lineTo(6,-m.roof-3);c.lineTo(24,-20);c.lineTo(44,-15);c.lineTo(56,-11);c.lineTo(60,-3);c.lineTo(60,8);
+    c.closePath();c.fill();
+    c.fillStyle='rgba(0,0,0,.55)';
+    c.beginPath();c.arc(-34,8,17,Math.PI,0);c.fill();
+    c.beginPath();c.arc(34,8,17,Math.PI,0);c.fill();
+    const glass=c.createLinearGradient(0,-m.roof,0,-14);
+    glass.addColorStop(0,'rgba(200,238,255,.98)');glass.addColorStop(.6,'rgba(70,120,170,.95)');glass.addColorStop(1,'rgba(25,45,70,.95)');
+    c.fillStyle=glass;c.beginPath();c.moveTo(-13,-m.roof+4);c.lineTo(4,-m.roof+1);c.lineTo(19,-20);c.lineTo(-9,-20);c.closePath();c.fill();
+    c.fillStyle=m.accent;c.fillRect(-62,-19,26,4);
+    c.fillStyle='#0a0f16';[-34,34].forEach(x=>{c.beginPath();c.arc(x,8,14,0,7);c.fill();});
+    c.fillStyle='#2a3f56';[-34,34].forEach(x=>{c.beginPath();c.arc(x,8,9,0,7);c.fill();});
+    c.fillStyle='#8fb6d6';[-34,34].forEach(x=>{c.beginPath();c.arc(x,8,3.4,0,7);c.fill();});
+    c.fillStyle='#fff8d0';c.beginPath();c.ellipse(57,-7,5,3.4,0,0,7);c.fill();
+    c.restore();
+  }
+
+  /* ---------- 场景 ---------- */
+  function drawSky(){
+    const sky=g.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,'#071226');sky.addColorStop(.55,'#0b2540');sky.addColorStop(1,'#123a52');
+    g.fillStyle=sky;g.fillRect(0,0,W,H);
+    // 星
+    for(let i=0;i<90;i++){
+      const x=(i*137.5+ (st.dist*0.02))%(W+40)-20;
+      const y=(i*79)%(H*0.55);
+      const a=.35+0.35*Math.sin(t0/600+i);
+      g.fillStyle='rgba(200,235,255,'+a.toFixed(2)+')';
+      g.fillRect(x,y,2,2);
+    }
+    // 轨道卫星
+    for(let i=0;i<3;i++){
+      const sx=(t0*0.02+i*W/3)%(W+160)-80;
+      const sy=40+i*34+Math.sin(t0/700+i)*6;
+      drawSat(sx,sy,0.8);
+    }
+    // 发射动画
+    const ph=(st.time/1000)%7;
+    if(ph<1.4){
+      const ry=H-120-ph*90;
+      g.save();g.translate(46,ry);
+      g.fillStyle='#e9f4ff';g.beginPath();g.moveTo(0,-18);g.lineTo(7,-2);g.lineTo(0,8);g.lineTo(-7,-2);g.closePath();g.fill();
+      g.fillStyle='#ff7a45';g.beginPath();g.moveTo(-4,8);g.lineTo(0,20+ph*10);g.lineTo(4,8);g.closePath();g.fill();
+      g.fillStyle='rgba(255,255,255,.25)';
+      for(let k=0;k<5;k++){g.beginPath();g.arc(-10-k*4,10+k*6,3+k,0,7);g.fill();}
+      g.restore();
+    }
+    // 远山
+    hillLayer(H-118,0.18,'#0b2033');
+    hillLayer(H-104,0.32,'#0e2c44');
+  }
+  function hillLayer(base,sp,color){
+    g.fillStyle=color;g.beginPath();g.moveTo(0,H);
+    for(let x=0;x<=W;x+=10){
+      const y=base - Math.abs(Math.sin((x+st.dist*sp)/210))*42 - Math.sin((x+st.dist*sp)/77)*10;
+      g.lineTo(x,y);
+    }
+    g.lineTo(W,H);g.closePath();g.fill();
+  }
+  function drawSat(x,y,s){
+    g.save();g.translate(x,y);g.scale(s,s);
+    g.fillStyle='#c7d6e6';g.fillRect(-6,-5,12,10);
+    g.fillStyle='#2f6fb8';g.fillRect(-26,-4,18,8);g.fillRect(8,-4,18,8);
+    g.strokeStyle='rgba(200,230,255,.35)';g.lineWidth=1;
+    g.beginPath();g.moveTo(-26,-4);g.lineTo(-12,-4);g.moveTo(8,-4);g.lineTo(22,-4);g.stroke();
+    g.fillStyle='#ffd166';g.beginPath();g.arc(0,-8,2.5,0,7);g.fill();
+    g.restore();
+  }
+  function drawCones(){
+    const roadTop=H-96;
+    st.cones.forEach(c=>{
+      const x=c.dist-st.dist+W*0.28;
+      if(x<-40||x>W+40)return;
+      g.save();g.translate(x,roadTop+8);
+      if(c.hit){g.globalAlpha=.35;}
+      // 路障锥
+      g.fillStyle='#e8622c';
+      g.beginPath();g.moveTo(0,-34);g.lineTo(-13,0);g.lineTo(13,0);g.closePath();g.fill();
+      g.fillStyle='#fff';
+      g.fillRect(-9,-16,18,5);
+      g.fillStyle='#2a1208';g.fillRect(-15,0,30,4);
+      g.restore();
+    });
+  }
+  function drawRoad(){
+    const roadTop=H-96;
+    g.fillStyle='#0a1522';g.fillRect(0,roadTop,W,H-roadTop);
+    // 沥青横向纹理
+    g.fillStyle='rgba(255,255,255,.03)';
+    for(let i=0;i<6;i++)g.fillRect(0,roadTop+8+i*15,W,1);
+    // 护栏 / 路肩
+    g.fillStyle='#16283c';g.fillRect(0,roadTop,W,7);
+    g.fillStyle='rgba(53,224,209,.5)';g.fillRect(0,roadTop+1,W,1.5);
+    // 中央虚线
+    const off=(st.dist%90);
+    g.fillStyle='rgba(255,209,102,.7)';
+    for(let x=-off;x<W;x+=90)g.fillRect(x,roadTop+46,52,4);
+    // 下边线
+    g.fillStyle='rgba(53,224,209,.28)';g.fillRect(0,H-12,W,2);
+    // 速度线
+    if(st.speed>40){
+      const n=Math.min(14,Math.floor(st.speed/12));
+      for(let i=0;i<n;i++){
+        const y=roadTop+12+((i*53+st.dist*1.6)%80);
+        const len=30+((i*37)%40);
+        g.fillStyle='rgba(180,230,255,'+(0.06+0.1*((i%3)/2))+')';
+        g.fillRect(((i*211-st.dist*1.5)%(W+200)+W+200)%(W+200)-100,y,len,1.5);
+      }
+    }
+  }
+  function drawGate(gate,idx){
+    const x=gate.dist-st.dist+W*0.28;
+    if(x<-140||x>W+140)return;
+    const top=H-250;
+    g.save();
+    g.globalAlpha=gate.done?0.22:1;
+    g.fillStyle=gate.done?'#2a4a3c':'#123a5a';
+    g.fillRect(x-6,top,12,H-96-top);
+    g.fillRect(x+116,top,12,H-96-top);
+    g.fillStyle=gate.done?'rgba(91,224,138,.5)':'rgba(74,158,255,.85)';
+    g.fillRect(x-16,top-10,150,18);
+    g.fillStyle='#04121f';g.font='bold 12px sans-serif';g.textAlign='center';
+    g.fillText('CHECK '+(idx+1),x+59,top+3);
+    // 光幕
+    if(!gate.done){
+      const lg=g.createLinearGradient(0,top,0,H-96);
+      lg.addColorStop(0,'rgba(53,224,209,.0)');lg.addColorStop(.5,'rgba(53,224,209,.18)');lg.addColorStop(1,'rgba(53,224,209,0)');
+      g.fillStyle=lg;g.fillRect(x+8,top,H-96-top-10,110);
+    }
+    g.restore();
+  }
+  function drawRing(r){
+    const x=r.dist-st.dist+W*0.28;
+    if(x<-60||x>W+60||r.got)return;
+    const y=H-150;
+    const pulse=1+0.08*Math.sin(t0/300+r.dist);
+    g.save();g.translate(x,y);g.scale(pulse,pulse);
+    g.strokeStyle='rgba(255,209,102,.9)';g.lineWidth=5;
+    g.beginPath();g.arc(0,0,26,0,7);g.stroke();
+    g.strokeStyle='rgba(255,209,102,.35)';g.lineWidth=12;
+    g.beginPath();g.arc(0,0,26,0,7);g.stroke();
+    g.fillStyle='#ffd166';g.font='bold 18px sans-serif';g.textAlign='center';g.fillText('?',0,6);
+    g.restore();
+  }
+  function drawItem(it){
+    const x=it.dist-st.dist+W*0.28;
+    if(x<-50||x>W+50||it.got)return;
+    const y=H-210+Math.sin(t0/400+it.dist)*8;
+    g.save();g.translate(x,y);
+    g.fillStyle='rgba(255,209,102,.16)';g.beginPath();g.arc(0,0,22,0,7);g.fill();
+    g.strokeStyle='rgba(255,209,102,.65)';g.lineWidth=1.5;g.beginPath();g.arc(0,0,22,0,7);g.stroke();
+    g.fillStyle='#ffe2a8';
+    if(it.type==='manual'){
+      g.fillRect(-13,-12,12,24);g.fillRect(1,-12,12,24);
+      g.fillStyle='rgba(255,255,255,.9)';g.fillRect(-11,-9,8,2);g.fillRect(-11,-4,8,2);
+      g.fillRect(4,-9,8,2);g.fillRect(4,-4,8,2);
+      g.fillStyle='rgba(120,90,40,.8)';g.fillRect(-2,-12,4,24);
+    }else{
+      g.beginPath();g.arc(0,-4,9,0,7);g.fill();
+      g.fillRect(-5,5,10,6);
+      g.fillStyle='rgba(120,90,40,.75)';
+      g.beginPath();g.moveTo(-6,6);g.lineTo(6,6);g.lineTo(4,9);g.lineTo(-4,9);g.closePath();g.fill();
+      g.strokeStyle='rgba(255,226,168,.9)';g.lineWidth=1.6;
+      g.beginPath();g.moveTo(-11,-4);g.lineTo(11,-4);g.stroke();
+    }
+    g.restore();
+  }
+  function drawParticles(){
+    st.parts=st.parts.filter(p=>p.life>0);
+    st.parts.forEach(p=>{
+      p.x-=p.vx;p.y+=p.vy;p.life-=1;
+      g.globalAlpha=Math.max(0,p.life/30);
+      g.fillStyle=p.c;g.beginPath();g.arc(p.x,p.y,2.4,0,7);g.fill();
+    });
+    g.globalAlpha=1;
+  }
+
+  function frame(ts){
+    if(!running)return;
+    if(!last)last=ts;
+    let dt=Math.min(40,ts-last);last=ts;
+    st.time+=dt;t0=st.time;
+    if(!paused&&!st.finished){
+      // 手动油门 / 刹车
+      if(st.boost>0){st.boost=Math.max(0,st.boost-dt*0.05);}
+      // 完全手动：不按任何键就减速停下
+      if(st.throttle)st.speed=Math.min(st.maxSpeed,st.speed+340*dt/1000);
+      else if(st.brake)st.speed=Math.max(-60,st.speed-430*dt/1000);
+      else if(st.reverse&&st.speed<=0)st.speed=Math.max(-70,st.speed-260*dt/1000);
+      else{
+        const dec=520*dt/1000;
+        st.speed = st.speed>0 ? Math.max(0,st.speed-dec) : Math.min(0,st.speed+dec);
+      }
+      if(st.boost>0)st.speed=Math.min(st.maxSpeed,st.speed+40*dt/1000);
+      st.dist=Math.max(0,st.dist+st.speed*dt/1000);
+      // 跳跃
+      if(st.jy>0||st.jvy>0){
+        st.jvy-=640*dt/1000;
+        st.jy+=st.jvy*dt/1000;
+        if(st.jy<=0){st.jy=0;st.jvy=0;st.onGround=true;}
+      }
+      if(st.crashInv>0)st.crashInv-=dt;
+      // 路障
+      st.cones.forEach(c=>{
+        if(c.hit||st.crashInv>0)return;
+        if(Math.abs(c.dist-st.dist)<34&&st.jy<20){
+          c.hit=true;st.crashInv=1400;
+          st.speed=Math.min(st.speed,40);
+          addScore(SCORE.l5crash);
+          toast('💥 撞上路障 −'+Math.abs(SCORE.l5crash)+' 分，速度掉下来了','bad');
+        }
+      });
+      // 拾取
+      st.items.forEach(it=>{
+        if(!it.got&&Math.abs(it.dist-st.dist)<70){
+          it.got=true;
+          if(it.type==='manual'){addMan('lv5',1);toast('拾取 📖 查阅手册 +1 次','gold');}
+          else{st.hints=(st.hints||0)+1;hintBtn.disabled=false;hintBtn.textContent='💡 提示 ×'+st.hints;toast('拾取 💡 提示卡 +1','gold');}
+        }
+      });
+      // 光环
+      st.rings.forEach((r,i)=>{
+        if(!r.got&&Math.abs(r.dist-st.dist)<55){r.got=true;ringQuiz(r.q);}
+      });
+      // 检查站
+      st.gates.forEach((gate,i)=>{
+        if(!gate.near&&st.dist>=gate.dist){
+          gate.near=true;
+          gateQuiz(gate,i);
+        }
+      });
+      // 终点
+      if(st.solved>=6&&st.dist>=st.finishDist)win();
+      // 粒子
+      if(st.boost>0&&Math.random()<0.5){
+        st.parts.push({x:W*0.28-58,y:H-96+6,vx:2+Math.random()*4,vy:(Math.random()-.5)*2,life:26,c:Math.random()<.5?'#35e0d1':'#ffd166'});
+      }
+    }
+    // 绘制
+    drawSky();
+    drawRoad();
+    drawCones();
+    st.gates.forEach((gt,i)=>drawGate(gt,i));
+    st.rings.forEach(drawRing);
+    st.items.forEach(drawItem);
+    drawParticles();
+    // 车
+    const carS=clamp(Math.min(W,H)/360,1.15,1.9);
+    const bob=st.onGround?Math.sin(t0/90)*1.2:0;
+    drawCar(W*0.28,H-96+14-23*carS+bob-st.jy,carS,st.car,st.dist/26,st.boost);
+    // 终点
+    const fx=st.finishDist-st.dist+W*0.28;
+    if(fx>-60&&fx<W+60){
+      g.fillStyle='#0a1522';g.fillRect(fx, H-250, 8, 154);
+      for(let i=0;i<10;i++)for(let j=0;j<5;j++){
+        g.fillStyle=(i+j)%2?'#e8f3ff':'#1b2740';
+        g.fillRect(fx+8+i*10,H-250+j*10,10,10);
+      }
+      g.fillStyle='#ffd166';g.font='bold 12px sans-serif';g.textAlign='center';g.fillText('FINISH',fx+58,H-262);
+    }
+    // HUD数值
+    fillEl.style.width=Math.min(100,st.dist/st.finishDist*100)+'%';
+    speedEl.textContent=Math.round(st.speed*0.9)+' km/h';
+    // 按键提示常驻
+    g.textAlign='left';
+    g.fillStyle='rgba(6,18,32,.55)';g.fillRect(14,14,318,86);
+    g.strokeStyle='rgba(74,158,255,.35)';g.strokeRect(14,14,318,86);
+    g.fillStyle='#8fd8ff';g.font='bold 14px sans-serif';
+    g.fillText('操作：↑/W 油门   ↓/S 刹车',26,38);
+    g.fillText('←/A 倒车   空格 跳跃',26,60);
+    g.fillStyle='#ffd166';
+    g.fillText('松手就停，撞路障 −'+Math.abs(SCORE.l5crash)+' 分',26,84);
+    if(st.speed<12&&!paused&&!st.finished){
+      g.textAlign='center';
+      g.fillStyle='rgba(53,224,209,.9)';g.font='bold 15px sans-serif';
+      g.fillText('按住「油门 ▲」或键盘 ↑ 起步',W/2,H-190);
+    }
+    if(paused){raf=0;}else{raf=requestAnimationFrame(frame);}
+  }
+  function resume(){last=0;if(running){cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);}}
+
+  /* ---------- 答题 ---------- */
+  function quizShell(title,q,opts){
+    paused=true;
+    const box=openModal({title:title,closable:false});
+    const body=$('.mbody',box);
+    let picked=[],locked=false,subBtn=null;
+    function build(){
+      body.innerHTML='<div class="qtext">'+q.q+'</div>';
+      picked=[];locked=false;
+      const {wrap}=buildOptions(q,sel=>{picked=sel;});
+      body.appendChild(wrap);
+      const fb=document.createElement('div');body.appendChild(fb);
+      const act=document.createElement('div');act.className='mactions';body.appendChild(act);
+      const hint=document.createElement('p');hint.className='note';hint.style.marginTop='8px';
+      hint.textContent='💡 '+(q.hint||'看任务的关键词：分辨率、重访、波段还是全天候。');
+      body.appendChild(hint);
+      subBtn=document.createElement('button');subBtn.className='btn primary';subBtn.textContent='提交答案';
+      subBtn.onclick=()=>{
+        if(locked||!picked.length)return;locked=true;
+        const right=picked.length===q.a.length&&picked.every(v=>q.a.includes(v));
+        markOptions(wrap,q.a,picked);
+        $$('.opt',wrap).forEach(o=>o.onclick=null);
+        subBtn.remove();
+        fb.innerHTML=feedbackHTML(q,right);
+        if(right){
+          const b=document.createElement('button');b.className='btn primary';b.textContent='继续比赛';
+          b.onclick=()=>{closeModal();paused=false;resume();opts.onSolved&&opts.onSolved();};
+          act.appendChild(b);
+        }else{
+          pushWrong(q,'第 5 关 · 赛车选星');
+          opts.onWrong&&opts.onWrong();
+          const b=document.createElement('button');b.className='btn';b.textContent='再答一次';
+          b.onclick=build;
+          act.appendChild(b);
+          if(opts.allowSkip){
+            const c=document.createElement('button');c.className='btn ghost';c.textContent='跳过';
+            c.onclick=()=>{closeModal();paused=false;resume();opts.onSkip&&opts.onSkip();};
+            act.appendChild(c);
+          }
+        }
+      };
+      act.appendChild(subBtn);
+    }
+    build();
+    return box;
+  }
+  function gateQuiz(gate,idx){
+    st.speed=0;
+    st.throttle=false;st.brake=false;
+    const q=gate.q;
+    quizShell('🚦 检查站 '+(idx+1)+' / 6 · 应用选星',q,{
+      onSolved(){
+        gate.done=true;
+        st.solved++;
+        cpEl.textContent=st.solved;
+        st.speed=210;st.boost=45;
+        addScore(SCORE.l5gate);
+        toast('✓ 答对 +'+SCORE.l5gate+' 分，继续加速！','good');
+      },
+      onWrong(){
+        addScore(SCORE.l5bad);
+        st.lives--;
+        updateLife();
+        if(st.lives<=0){
+          st.finished=true;
+          setTimeout(()=>{closeModal();autoAdvance('lv5','生命耗尽，自动进入第 6 关');},200);
+        }
+      },
+      allowSkip:false
+    });
+  }
+  function updateLife(){if(lifeEl)lifeEl.textContent='❤'.repeat(Math.max(0,st.lives))+'♡'.repeat(Math.max(0,3-st.lives));}
+  function ringQuiz(q){
+    const box=openModal({title:'✨ 加分光环',closable:false});
+    const body=$('.mbody',box);
+    body.innerHTML='<div class="qtext">'+q.q+'</div>';
+    let picked=[],done=false;
+    const {wrap}=buildOptions(q,sel=>{
+      picked=sel;
+      if(sel.length){judge();}
+    });
+    body.appendChild(wrap);
+    const fb=document.createElement('div');body.appendChild(fb);
+    const act=document.createElement('div');act.className='mactions';body.appendChild(act);
+    function judge(){
+      if(done)return;done=true;
+      $$('.opt',wrap).forEach(o=>o.onclick=null);
+      const right=picked.length===q.a.length&&picked.every(v=>q.a.includes(v));
+      markOptions(wrap,q.a,picked);
+      if(right){
+        fb.innerHTML='<div class="explain"><b>✓ 答对 +'+SCORE.l5ring+' 分</b>　'+q.e+'</div>';
+        addScore(SCORE.l5ring);st.boost=60;st.speed=Math.min(st.maxSpeed,st.speed+30);
+        toast('✓ 光环 +'+SCORE.l5ring+' 分，短时加速','good');
+      }else{
+        fb.innerHTML=feedbackHTML(q,false);
+        addScore(SCORE.l5bad);pushWrong(q,'第 5 关 · 加分光环');
+      }
+      const b=document.createElement('button');b.className='btn';b.textContent='继续';
+      b.onclick=()=>{closeModal();paused=false;resume();};
+      act.appendChild(b);
+    }
+  }
+
+  function win(){
+    st.finished=true;running=false;cancelAnimationFrame(raf);
+    addScore(SCORE.l5clear);
+    const rec=completeLevel('lv5',4);
+    openModal({
+      title:'🏁 冲过终点 · 遥感赛车手',
+      html:'<div style="font-size:44px;text-align:center">🏎️</div><p style="text-align:center;margin-top:8px">6 个检查站全部完成，本关得分 <b style="color:#ffd166">'+(rec?rec.score:0)+'</b> 分。</p><p class="note" style="margin-top:10px">选星三步：先看任务要“多细”，再看“多快”，最后看“能不能穿透云雨、有没有需要的波段”。</p>',
+      actions:[{label:'挑战 Boss 关',cls:'primary',onClick:()=>{closeModal();goLevel('lv6');}},{label:'再跑一次',onClick:()=>{closeModal();start();}}]
+    });
+  }
+
+  /* ---------- 道具 ---------- */
+  const MANUAL5='<table class="manualtable"><thead><tr><th>任务</th><th>主选</th><th>关键理由</th></tr></thead><tbody>'+
+    '<tr><td>蓝藻高频</td><td>HY-1C</td><td>每日水色，叶绿素/藻蓝蛋白</td></tr>'+
+    '<tr><td>热岛</td><td>Landsat TIRS、SDGSAT-1</td><td>100 m / 30 m 热红外</td></tr>'+
+    '<tr><td>作物胁迫</td><td>GF-6、Sentinel-2</td><td>红边波段</td></tr>'+
+    '<tr><td>洪涝</td><td>GF-3、Sentinel-1</td><td>C 波段 SAR 穿云</td></tr>'+
+    '<tr><td>宽幅普查</td><td>GF-1 WFV</td><td>800 km、16 m、免费</td></tr>'+
+    '<tr><td>形变</td><td>LT-1、Sentinel-1</td><td>InSAR 毫米级</td></tr>'+
+    '<tr><td>台风</td><td>FY-4A</td><td>静止 15 分钟全盘</td></tr>'+
+    '<tr><td>1:1 万 DEM</td><td>GF-7</td><td>0.65 m 双线阵</td></tr>'+
+    '</tbody></table>';
+  manualBtn.onclick=()=>{
+    if(!st||st.finished||paused)return;
+    paused=true;
+    const ok=manualSheet('lv5',MANUAL5,()=>{if(!st.finished){paused=false;last=0;resume();}});
+    if(!ok)paused=false;
+  };
+  hintBtn.onclick=()=>{
+    if(!st||st.finished)return;
+    if(!st.hints){toast('提示卡用完了，赛道上有 💡 可捡','bad');return;}
+    st.hints--;hintBtn.textContent='💡 提示 ×'+st.hints;
+    if(st.hints<=0)hintBtn.disabled=true;
+    const q=(st.gates.find(x=>!x.done)||{}).q;
+    toast('💡 '+(q&&q.hint?q.hint:'看关键词：分辨率、重访、全天候、波段。'),'gold');
+  };
+
+  /* ---------- 选择赛车 ---------- */
+  function renderCars(){
+    carList.innerHTML='';
+    CARS.forEach((c,i)=>{
+      const d=document.createElement('div');d.className='carbox'+(i===0?' sel':'');
+      const ca=document.createElement('canvas');ca.width=320;ca.height=172;
+      const t=document.createElement('div');t.className='cn';t.textContent=c.n;
+      const s=document.createElement('div');s.className='cd';s.textContent=c.d;
+      d.appendChild(ca);d.appendChild(t);d.appendChild(s);
+      d.onclick=()=>{$$('.carbox',carList).forEach(x=>x.classList.remove('sel'));d.classList.add('sel');st.car=i;};
+      carList.appendChild(d);
+      requestAnimationFrame(()=>drawMini(ca,i));
+    });
+    const go=document.createElement('button');go.className='btn primary';go.textContent='出发 ▸';
+    go.style.flexBasis='100%';go.style.maxWidth='360px';go.style.margin='6px auto 0';
+    go.onclick=()=>{
+      carPane.style.display='none';
+      paused=false;
+      if(!running){running=true;}
+      resume();
+    };
+    carList.appendChild(go);
+  }
+
+  function start(){
+    fit();
+    startRun('lv5');
+    st=newState();
+    paused=true;running=false;
+    cancelAnimationFrame(raf);
+    carPane.style.display='flex';
+    MAN.lv5=2;refreshManualBtns();
+    hintBtn.disabled=true;hintBtn.textContent='💡 提示 ×0';
+    st.hints=0;
+    cpEl.textContent='0';updateLife();
+    renderCars();
+  }
+  function stop(){running=false;cancelAnimationFrame(raf);st&&(st.throttle=false,st.brake=false);}
+
+  /* ---------- 手动驾驶 ---------- */
+  function setThrottle(v){if(!st)return;st.throttle=!!v;if(v)st.brake=false;throttleBtn.classList.toggle('on',!!v);}
+  function setBrake(v){if(!st)return;st.brake=!!v;if(v)st.throttle=false;brakeBtn.classList.toggle('on',!!v);}
+  const revBtn=$('#l5reverse'),jumpBtn=$('#l5jump');
+  revBtn.addEventListener('pointerdown',e=>{e.preventDefault();if(st)st.reverse=true;});
+  revBtn.addEventListener('pointerup',()=>{if(st)st.reverse=false;});
+  revBtn.addEventListener('pointerleave',()=>{if(st)st.reverse=false;});
+  jumpBtn.addEventListener('click',e=>{e.preventDefault();jump();});
+  throttleBtn.addEventListener('pointerdown',e=>{e.preventDefault();setThrottle(true);});
+  throttleBtn.addEventListener('pointerup',()=>setThrottle(false));
+  throttleBtn.addEventListener('pointerleave',()=>setThrottle(false));
+  throttleBtn.addEventListener('pointercancel',()=>setThrottle(false));
+  brakeBtn.addEventListener('pointerdown',e=>{e.preventDefault();setBrake(true);});
+  brakeBtn.addEventListener('pointerup',()=>setBrake(false));
+  brakeBtn.addEventListener('pointerleave',()=>setBrake(false));
+  brakeBtn.addEventListener('pointercancel',()=>setBrake(false));
+  window.addEventListener('keydown',e=>{
+    if(currentLevel!=='lv5'||!running||paused)return;
+    if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();setThrottle(true);}
+    if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){e.preventDefault();setBrake(true);}
+    if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){e.preventDefault();st.reverse=true;}
+    if(e.key===' '||e.key==='Spacebar'){e.preventDefault();jump();}
+  });
+  window.addEventListener('keyup',e=>{
+    if(e.key==='ArrowUp'||e.key==='w'||e.key==='W')setThrottle(false);
+    if(e.key==='ArrowDown'||e.key==='s'||e.key==='S')setBrake(false);
+    if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')st&&(st.reverse=false);
+  });
+  function jump(){
+    if(!st||st.finished)return;
+    if(!st.onGround&&st.jy>10)return;      // 空中不再连跳，落地/贴地才起跳
+    st.jvy=470;st.onGround=false;          // 跳得更高、滞空更久，两个连排路障也能过
+  }
+  window.addEventListener('resize',()=>{if(currentLevel==='lv5')fit();});
+  return {start,stop,state:()=>st};
+})();
+window.L5=L5;
+
+/* ============================================================
+   第 6 关 · 超级马里奥式横版闯关（Canvas）
+   ============================================================ */
+const L6=(function(){
+  const stage=$('#stage6'), cv=$('#cv6'), g=cv.getContext('2d');
+  const fillEl=$('#l6fill'), cpEl=$('#l6cp');
+  const heroPane=$('#heroPane'), heroList=$('#heroList');
+  const manualBtn=$('#l6manual'), hintBtn=$('#l6hint');
+
+  const HEROES=[
+    {n:'经典红',d:'调度员 · 红帽',cap:'#e63b2e',shirt:'#e63b2e',over:'#2b5fd9',skin:'#ffc9a0',hair:'#4a2c18'},
+    {n:'工程师蓝',d:'调度员 · 蓝帽',cap:'#2b6fd9',shirt:'#3f8ef0',over:'#1b3a63',skin:'#ffc9a0',hair:'#2a1a10'},
+    {n:'生态绿',d:'调度员 · 绿帽',cap:'#3ab07a',shirt:'#3ab07a',over:'#2b5fd9',skin:'#ffd7b5',hair:'#3a2412'},
+    {n:'高分金',d:'调度员 · 金帽',cap:'#ffd166',shirt:'#ffb454',over:'#2b5fd9',skin:'#ffc9a0',hair:'#5a3a1a'}
+  ];
+  const TYPE={
+    rock:{label:'巨石',color:'#7d8ea1'},
+    storm:{label:'风暴闸门',color:'#7a5cff'},
+    fog:{label:'浓雾屏障',color:'#b9d4e6'}
+  };
+
+  let W=0,H=0,dpr=1,raf=0,last=0,t0=0,running=false,paused=false;
+  let st=null;
+
+  function fit(){
+    const r=stage.getBoundingClientRect();
+    dpr=Math.min(2,window.devicePixelRatio||1);
+    W=Math.max(320,r.width);H=Math.max(240,r.height);
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    g.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function newState(){
+    const qs=pickN(L6_POOL,6);
+    const types=['rock','storm','fog','rock','storm','fog'];
+    const s={
+      hero:0,x:60,y:0,vx:0,vy:0,onGround:true,jumps:0,dir:1,phase:0,lives:3,over:false,
+      inv:0,ammo:0,hints:1,shots:0,left:false,right:false,big:false,bump:0,hasGun:false,flashT:0,
+      obs:[1250,2050,2750,3350,3950,4280].map((x,i)=>({x,type:types[i],q:qs[i],done:false,near:false,shake:0})),
+      monsters:[1550,2350,3050,3650].map((x,i)=>({x,base:x,dir:i%2?1:-1,alive:true,hitCd:0,q:pickN(L6_POOL,1)[0]})),
+      guns:[{x:880,got:false},{x:2900,got:false}],
+      plats:[
+        {x1:520,x2:604,top:34,type:'step'},
+        {x1:604,x2:688,top:68,type:'step'},
+        {x1:688,x2:772,top:102,type:'step'},
+        {x1:952,x2:1024,top:164,brk:132,type:'brick',gone:false,hitShake:0},
+        {x1:2560,x2:2632,top:182,brk:150,type:'brick',gone:false,hitShake:0}
+      ],
+      mushrooms:[],
+      bullets:[],
+      boss:{x:4650,done:false,near:false},
+      finish:4950,
+      parts:[],time:0,coins:[],
+      manual:1,hint:1
+    };
+    if(/[?&]boss=1/.test(location.search)){
+      s.obs.forEach(o=>{o.done=true;o.near=true;});
+      s.x=s.boss.x-90;
+    }
+    return s;
+  }
+  function coinField(){
+    const arr=[];
+    for(let x=200;x<4900;x+=250){
+      const k=Math.round(x/250)%6;
+      let y=110+(x%3)*26;
+      if(k===2||k===5)y=175;          // 站在阶梯或二段跳才够到
+      else if(k===1||k===4)y=140;
+      arr.push({x,y,got:false});
+    }
+    return arr;
+  }
+
+  /* ---------- 绘制 ---------- */
+  function groundY(){return H-64;}
+  function camera(){
+    return clamp(st.x-W*0.32,0,Math.max(0,st.finish+240-W));
+  }
+  function drawSky(){
+    const sky=g.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,'#0a1a33');sky.addColorStop(.5,'#123b58');sky.addColorStop(1,'#1d5a6a');
+    g.fillStyle=sky;g.fillRect(0,0,W,H);
+    // 星星
+    for(let i=0;i<70;i++){
+      const x=(i*173)%W,y=(i*67)%(H*0.5);
+      g.fillStyle='rgba(210,240,255,'+(0.25+0.3*Math.abs(Math.sin(t0/700+i)))+')';
+      g.fillRect(x,y,2,2);
+    }
+    // 卫星
+    const sx=((t0*0.03)%(W+120))-60;
+    drawSat(sx,56,1);
+    drawSat(((t0*0.02+W*0.7)%(W+120))-60,96,0.8);
+    // 云
+    const cam=camera();
+    for(let i=0;i<4;i++){
+      const cx=((i*260-cam*0.25)%(W+300)+W+300)%(W+300)-150;
+      cloud(cx,90+i*18,0.9+i*0.1);
+    }
+  }
+  function cloud(x,y,s){
+    g.save();g.translate(x,y);g.scale(s,s);
+    g.fillStyle='rgba(200,230,245,.22)';
+    [[0,0,26],[24,4,20],[-24,4,18],[10,-10,16]].forEach(c=>{g.beginPath();g.arc(c[0],c[1],c[2],0,7);g.fill();});
+    g.restore();
+  }
+  function drawSat(x,y,s){
+    g.save();g.translate(x,y);g.scale(s,s);
+    g.fillStyle='#c7d6e6';g.fillRect(-6,-5,12,10);
+    g.fillStyle='#2f6fb8';g.fillRect(-26,-4,18,8);g.fillRect(8,-4,18,8);
+    g.fillStyle='#ffd166';g.beginPath();g.arc(0,-8,2.5,0,7);g.fill();
+    g.restore();
+  }
+  function drawHills(){
+    const cam=camera();
+    g.fillStyle='#0e2f42';
+    g.beginPath();g.moveTo(0,H);
+    for(let x=0;x<=W;x+=14){
+      const wx=x+cam*0.4;
+      const y=groundY()-40-Math.abs(Math.sin(wx/240))*54-Math.sin(wx/90)*8;
+      g.lineTo(x,y);
+    }
+    g.lineTo(W,H);g.closePath();g.fill();
+    g.fillStyle='#124055';
+    g.beginPath();g.moveTo(0,H);
+    for(let x=0;x<=W;x+=14){
+      const wx=x+cam*0.7;
+      const y=groundY()-18-Math.abs(Math.sin(wx/150))*34;
+      g.lineTo(x,y);
+    }
+    g.lineTo(W,H);g.closePath();g.fill();
+  }
+  function drawGround(){
+    const cam=camera(), gy=groundY();
+    g.fillStyle='#3a2a1f';g.fillRect(0,gy,W,H-gy);
+    g.fillStyle='#4d3728';g.fillRect(0,gy,W,10);
+    const off=Math.floor(cam/32)*32;
+    for(let x=-off;x<W-off+32;x+=32){
+      for(let row=0;row<2;row++){
+        g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=1;
+        g.strokeRect(x+(row%2?16:0),gy+12+row*18,32,18);
+      }
+    }
+    g.fillStyle='rgba(255,200,120,.12)';g.fillRect(0,gy+8,W,2);
+  }
+  function drawPlats(){
+    const cam=camera(), gy=groundY();
+    st.plats.forEach(p=>{
+      const sx1=p.x1-cam,sx2=p.x2-cam;
+      if(sx2<-60||sx1>W+60)return;
+      if(p.type==='step'){
+        g.fillStyle='#3b5f78';g.fillRect(sx1,gy-p.top,sx2-sx1,p.top);
+        g.fillStyle='#6fa8c8';g.fillRect(sx1,gy-p.top,sx2-sx1,5);
+        g.strokeStyle='rgba(0,0,0,.3)';g.lineWidth=1;g.strokeRect(sx1,gy-p.top,sx2-sx1,p.top);
+      }else{
+        g.save();
+        if(p.hitShake>0){g.translate((Math.random()-.5)*p.hitShake,0);p.hitShake-=1;}
+        g.fillStyle=p.gone?'rgba(120,110,90,.35)':'#c8901f';
+        g.fillRect(sx1,gy-p.brk,sx2-sx1,p.brk-p.top+28);
+        g.fillStyle=p.gone?'rgba(90,80,60,.3)':'#ffd166';
+        g.fillRect(sx1,gy-p.brk,sx2-sx1,5);
+        g.strokeStyle='rgba(60,40,10,.6)';g.lineWidth=2;g.strokeRect(sx1,gy-p.brk,sx2-sx1,p.brk-p.top+28);
+        g.fillStyle='rgba(90,60,10,.75)';g.font='bold 14px sans-serif';g.textAlign='center';
+        if(!p.gone)g.fillText('?',(sx1+sx2)/2,gy-p.brk+26);
+        g.restore();
+      }
+    });
+  }
+  function drawMushrooms(){
+    const cam=camera(), gy=groundY();
+    st.mushrooms.forEach(m=>{
+      if(m.got)return;
+      const sx=m.x-cam;
+      if(sx<-30||sx>W+30)return;
+      const y=gy-m.y;
+      g.save();g.translate(sx,y);
+      g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(0,2,13,3,0,0,7);g.fill();
+      g.fillStyle='#f5e6c8';g.fillRect(-5,-14,10,14);
+      g.fillStyle='#e63b2e';g.beginPath();g.arc(0,-16,15,Math.PI,0);g.fill();
+      g.fillStyle='#fff';g.beginPath();g.arc(-6,-20,3.5,0,7);g.fill();g.beginPath();g.arc(6,-19,3,0,7);g.fill();
+      g.fillStyle='#3a2412';g.fillRect(-3,-8,2,3);g.fillRect(2,-8,2,3);
+      g.restore();
+    });
+  }
+  function drawObs(o){
+    const sx=o.x-camera();
+    if(sx<-90||sx>W+90)return;
+    const gy=groundY();
+    g.save();g.translate(sx,gy);
+    if(o.shake>0){g.translate((Math.random()-.5)*o.shake*3,0);o.shake-=1;}
+    if(o.type==='rock'){
+      g.fillStyle=o.done?'rgba(120,140,160,.18)':'#6b7d90';
+      g.beginPath();
+      g.moveTo(-30,0);g.lineTo(-36,-40);g.lineTo(-18,-74);g.lineTo(6,-96);g.lineTo(28,-70);g.lineTo(36,-32);g.lineTo(32,0);
+      g.closePath();g.fill();
+      g.fillStyle='rgba(255,255,255,.18)';
+      g.beginPath();g.moveTo(-18,-74);g.lineTo(6,-96);g.lineTo(14,-80);g.lineTo(-8,-64);g.closePath();g.fill();
+      g.strokeStyle='rgba(0,0,0,.3)';g.lineWidth=2;
+      g.beginPath();g.moveTo(-6,-20);g.lineTo(2,-44);g.lineTo(-4,-58);g.stroke();
+    }else if(o.type==='storm'){
+      g.globalAlpha=o.done?.2:1;
+      g.fillStyle='#1a2340';g.fillRect(-32,-160,64,160);
+      g.strokeStyle='#7a5cff';g.lineWidth=3;
+      g.strokeRect(-32,-160,64,160);
+      g.fillStyle='#7a5cff';
+      g.beginPath();g.moveTo(-8,-150);g.lineTo(6,-150);g.lineTo(-2,-124);g.lineTo(12,-124);g.lineTo(-6,-92);g.lineTo(0,-120);g.lineTo(-12,-120);g.closePath();g.fill();
+      g.fillStyle='rgba(122,92,255,.18)';g.fillRect(-32,-160,64,160);
+      g.globalAlpha=1;
+    }else{
+      g.globalAlpha=o.done?.15:1;
+      const lg=g.createLinearGradient(0,-150,0,0);
+      lg.addColorStop(0,'rgba(200,225,240,.05)');lg.addColorStop(.5,'rgba(200,225,240,.55)');lg.addColorStop(1,'rgba(200,225,240,.15)');
+      g.fillStyle=lg;g.fillRect(-40,-150,80,150);
+      g.strokeStyle='rgba(230,245,255,.5)';g.lineWidth=1.5;
+      for(let i=0;i<5;i++){g.beginPath();g.moveTo(-38+i*16,-150);g.bezierCurveTo(-20+i*16,-100,-50+i*16,-50,-30+i*16,0);g.stroke();}
+      g.globalAlpha=1;
+      g.fillStyle='rgba(10,25,40,.75)';g.font='bold 13px sans-serif';g.textAlign='center';
+      g.fillText('浓雾',0,-70);
+    }
+    g.restore();
+  }
+  function drawBoss(){
+    const sx=st.boss.x-camera();
+    if(sx<-200||sx>W+200)return;
+    const gy=groundY();
+    g.save();g.translate(sx,gy);
+    g.fillStyle=st.boss.done?'rgba(60,90,120,.4)':'#1b2a44';
+    g.fillRect(-70,-230,140,230);
+    g.strokeStyle=st.boss.done?'#5be08a':'#ffd166';g.lineWidth=3;
+    g.strokeRect(-70,-230,140,230);
+    g.fillStyle=st.boss.done?'#5be08a':'#ffd166';
+    g.font='bold 14px sans-serif';g.textAlign='center';
+    g.fillText(st.boss.done?'已开启':'BOSS 闸门',0,-205);
+    for(let i=0;i<3;i++){
+      g.beginPath();g.arc(-30+i*30,-180,6,0,7);
+      const on=st.obs.filter(o=>o.done).length;
+      g.fillStyle=st.boss.done?'#5be08a':(i<on?'#ffd166':'rgba(255,255,255,.2)');
+      g.fill();
+    }
+    // 门缝光
+    if(!st.boss.done){
+      const lg=g.createLinearGradient(0,-160,0,0);
+      lg.addColorStop(0,'rgba(255,209,102,.05)');lg.addColorStop(.6,'rgba(255,209,102,.22)');lg.addColorStop(1,'rgba(255,209,102,.05)');
+      g.fillStyle=lg;g.fillRect(-58,-165,116,160);
+    }
+    g.restore();
+  }
+  function drawFinish(){
+    const sx=st.finish-camera();
+    if(sx<-260||sx>W+260)return;
+    const gy=groundY();
+    g.save();g.translate(sx,gy);
+    g.fillStyle='#0d1b2c';g.fillRect(-90,-260,180,260);
+    g.fillStyle='#16324e';
+    for(let i=0;i<6;i++)for(let j=0;j<3;j++)g.fillRect(-80+i*28,-240+j*40,20,28);
+    g.fillStyle='#35e0d1';g.fillRect(-8,-268,16,50);
+    g.fillStyle='rgba(53,224,209,.5)';g.beginPath();g.arc(0,-268,26,0,7);g.fill();
+    g.fillStyle='#fff';g.font='bold 11px sans-serif';g.textAlign='center';g.fillText('指挥大楼',0,-290);
+    g.restore();
+  }
+  function drawHero(){
+    const p=HEROES[st.hero];
+    const sx=st.x-camera(), sy=groundY()-st.y;
+    g.save();g.translate(sx,sy);const hs=st.big?1.56:1.34;g.scale(st.dir<0?-hs:hs,hs);
+    g.fillStyle='rgba(0,0,0,.32)';
+    g.beginPath();g.ellipse(0,2,15,4,0,0,7);g.fill();
+    const run=st.onGround?Math.sin(st.phase):0.6;
+    // 腿 / 靴
+    g.fillStyle='#2a1c14';
+    g.fillRect(-11+run*3,-8,10,8);g.fillRect(1-run*3,-8,10,8);
+    // 背带裤
+    g.fillStyle=p.over;
+    g.beginPath();g.roundRect(-11,-28,22,22,5);g.fill();
+    // 上衣 / 手臂
+    g.fillStyle=p.shirt;
+    g.fillRect(-14,-30,7,13);g.fillRect(7,-30,7,13);
+    g.fillStyle=p.skin;
+    g.beginPath();g.arc(-11,-17,4,0,7);g.fill();
+    g.beginPath();g.arc(11,-17,4,0,7);g.fill();
+    // 背带
+    g.fillStyle=p.over;
+    g.fillRect(-8,-32,3,6);g.fillRect(5,-32,3,6);
+    // 头
+    g.fillStyle=p.skin;
+    g.beginPath();g.arc(0,-40,10,0,7);g.fill();
+    // 头发
+    g.fillStyle=p.hair;
+    g.beginPath();g.arc(-2,-44,9,Math.PI,Math.PI*2);g.fill();
+    // 鼻子
+    g.fillStyle='#ffb496';g.beginPath();g.arc(8,-39,4,0,7);g.fill();
+    // 眼
+    g.fillStyle='#1b1b1b';g.beginPath();g.arc(4,-43,1.8,0,7);g.fill();
+    // 胡子
+    g.fillStyle=p.hair;
+    g.beginPath();g.roundRect(-2,-35,12,4,2);g.fill();
+    // 帽子
+    g.fillStyle=p.cap;
+    g.beginPath();g.arc(0,-47,10,Math.PI,0);g.fill();
+    g.fillRect(0,-48,14,3);
+    g.fillStyle='#fff';g.beginPath();g.arc(0,-51,3,0,7);g.fill();
+    g.fillStyle=p.cap;g.beginPath();g.arc(0,-51,2,0,7);g.fill();
+    // 跳跃时手臂上举
+    if(!st.onGround){
+      g.fillStyle=p.skin;
+      g.beginPath();g.arc(-10,-34,4,0,7);g.fill();
+      g.beginPath();g.arc(12,-34,4,0,7);g.fill();
+    }
+    // 手持干扰枪（捡到枪之后一直显示）
+    if(st.hasGun){
+      g.save();g.translate(9,-21);
+      // 握把
+      g.fillStyle='#8fa8bd';g.fillRect(-4,-2,5,10);
+      // 枪身
+      g.fillStyle='#d7e6f5';g.fillRect(-5,-7,20,7);
+      g.fillStyle='#9fb6cc';g.fillRect(-5,-2,20,2);
+      // 枪口
+      g.fillStyle='#ffd166';g.fillRect(14,-6,4,5);
+      // 开火闪光
+      if(st.flashT>0){
+        g.globalAlpha=Math.min(1,st.flashT/90);
+        g.fillStyle='#fff3b0';
+        g.beginPath();g.moveTo(17,-6);g.lineTo(31,-11);g.lineTo(26,-3);g.lineTo(31,3);g.lineTo(17,1);g.closePath();g.fill();
+        g.fillStyle='rgba(255,209,102,.65)';g.beginPath();g.arc(21,-4,7,0,7);g.fill();
+        g.globalAlpha=1;
+      }
+      g.restore();
+    }
+    g.restore();
+  }
+  function drawCoins(){
+    const cam=camera();
+    st.coins.forEach(c=>{
+      if(c.got)return;
+      const sx=c.x-cam;
+      if(sx<-30||sx>W+30)return;
+      const cy=groundY()-c.y+Math.sin(t0/400+c.x)*3;
+      g.fillStyle='rgba(255,209,102,.9)';
+      g.beginPath();g.ellipse(sx,cy,6,8,0,0,7);g.fill();
+      g.strokeStyle='rgba(180,120,20,.75)';g.lineWidth=1.2;
+      g.beginPath();g.ellipse(sx,cy,4,5.6,0,0,7);g.stroke();
+      g.strokeStyle='rgba(255,255,255,.55)';g.beginPath();g.ellipse(sx,cy,2,3,0,0,7);g.stroke();
+    });
+  }
+  function drawMonsters(){
+    const cam=camera(), gy=groundY();
+    st.monsters.forEach(m=>{
+      if(!m.alive)return;
+      const sx=m.x-cam;
+      if(sx<-40||sx>W+40)return;
+      const bob=Math.abs(Math.sin(st.time/260+m.base))*3;
+      g.save();g.translate(sx,gy-bob);
+      // 影子
+      g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(0,2,17,4,0,0,7);g.fill();
+      // 身体
+      g.fillStyle='#6b3fa0';g.beginPath();g.roundRect(-16,-34,32,34,10);g.fill();
+      g.fillStyle='#8a5cc4';g.beginPath();g.roundRect(-13,-31,26,14,7);g.fill();
+      // 触角
+      g.strokeStyle='#c9a6f0';g.lineWidth=2;
+      g.beginPath();g.moveTo(-6,-34);g.lineTo(-9,-44);g.moveTo(6,-34);g.lineTo(9,-44);g.stroke();
+      g.fillStyle='#ffd166';g.beginPath();g.arc(-9,-45,2.6,0,7);g.fill();g.beginPath();g.arc(9,-45,2.6,0,7);g.fill();
+      // 眼睛
+      g.fillStyle='#fff';g.beginPath();g.arc(-6,-24,5,0,7);g.fill();g.beginPath();g.arc(7,-24,5,0,7);g.fill();
+      g.fillStyle='#20102e';
+      g.beginPath();g.arc(-6+m.dir*1.5,-24,2.4,0,7);g.fill();
+      g.beginPath();g.arc(7+m.dir*1.5,-24,2.4,0,7);g.fill();
+      // 脚
+      g.fillStyle='#4a2670';g.fillRect(-13,-3,9,4);g.fillRect(4,-3,9,4);
+      // 名字标
+      g.fillStyle='rgba(200,160,240,.85)';g.font='bold 10px sans-serif';g.textAlign='center';
+      g.fillText('干扰兽',0,-54);
+      g.restore();
+    });
+  }
+  function drawGuns(){
+    const cam=camera(), gy=groundY();
+    st.guns.forEach(gun=>{
+      if(gun.got)return;
+      const sx=gun.x-cam;
+      if(sx<-30||sx>W+30)return;
+      const y=gy-40+Math.sin(st.time/400+gun.x)*6;
+      g.save();g.translate(sx,y);
+      g.fillStyle='rgba(255,209,102,.18)';g.beginPath();g.arc(0,0,18,0,7);g.fill();
+      g.fillStyle='#d7e6f5';g.fillRect(-12,-4,22,7);
+      g.fillStyle='#9fb6cc';g.fillRect(-4,3,7,8);
+      g.fillStyle='#ffd166';g.fillRect(6,-1,8,3);
+      g.restore();
+    });
+  }
+  function drawBullets(){
+    const cam=camera(), gy=groundY();
+    st.bullets.forEach(b=>{
+      const sx=b.x-cam;
+      if(sx<-20||sx>W+20)return;
+      g.fillStyle='rgba(255,240,150,.9)';
+      g.beginPath();g.arc(sx,gy-b.y,3.4,0,7);g.fill();
+      g.fillStyle='rgba(255,209,102,.35)';
+      g.beginPath();g.arc(sx-8,gy-b.y,7,0,7);g.fill();
+    });
+  }
+  function drawParts(){
+    st.parts=st.parts.filter(p=>p.life>0);
+    st.parts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.vy+=1.2;p.life--;
+      g.globalAlpha=Math.max(0,p.life/28);
+      g.fillStyle=p.c;g.fillRect(p.x,p.y,p.s,p.s);
+    });
+    g.globalAlpha=1;
+  }
+
+  function frame(ts){
+    if(!running)return;
+    if(!last)last=ts;
+    let dt=Math.min(40,ts-last);last=ts;
+    st.time+=dt;t0=st.time;
+    if(!paused&&!st.boss.done&&!st.over){
+      // 完全手动：左右自己走，松手就停
+      const dir=(st.right?1:0)-(st.left?1:0);
+      if(dir){st.dir=dir;st.vx+=dir*620*dt/1000;st.vx=clamp(st.vx,-165,165);}
+      else{
+        const dec=760*dt/1000;
+        st.vx = st.vx>0?Math.max(0,st.vx-dec):Math.min(0,st.vx+dec);
+      }
+      st.x=clamp(st.x+st.vx*dt/1000,12,st.finish+140);
+      st.phase+=Math.abs(st.vx)*dt/1000*0.09;
+      if(st.inv>0)st.inv-=dt;
+      if(st.bump>0)st.bump-=dt;
+      if(st.flashT>0)st.flashT-=dt;
+      // 跳跃物理（最多连跳 3 段）
+      const prevY=st.y;
+      st.vy-=640*dt/1000;
+      st.y+=st.vy*dt/1000;
+      // 顶砖块：上升中头部撞到砖块底部
+      if(st.vy>0){
+        st.plats.forEach(p=>{
+          if(p.type!=='brick'||p.gone)return;
+          if(Math.abs(st.x-(p.x1+p.x2)/2)>40)return;
+          const headOld=prevY+96,headNew=st.y+96;
+          if(headOld<=p.brk&&headNew>=p.brk){
+            p.gone=true;p.hitShake=10;st.bump=240;st.vy=-40;
+            addScore(SCORE.l6block);
+            st.mushrooms.push({x:(p.x1+p.x2)/2,y:p.top,vx:45,got:false});
+            toast('顶开砖块 +'+SCORE.l6block+' 分，蘑菇掉下来了','gold');
+          }
+        });
+      }
+      // 落地 / 站在阶梯与砖块上
+      let sup=0;
+      st.plats.forEach(p=>{
+        if(p.type==='brick'&&p.gone)return;
+        if(st.x>p.x1-12&&st.x<p.x2+12&&prevY>=p.top-6)sup=Math.max(sup,p.top);
+      });
+      if(st.y<=sup&&st.vy<=0){st.y=sup;st.vy=0;st.onGround=true;st.jumps=0;}
+      else if(st.y>sup)st.onGround=false;
+      // 蘑菇
+      st.mushrooms.forEach(m=>{
+        if(m.got)return;
+        m.x+=m.vx*dt/1000;
+        if(m.y>0){m.vy=(m.vy||0)-520*dt/1000;m.y+=m.vy*dt/1000;if(m.y<=0){m.y=0;m.vy=0;}}
+        if(m.x>st.x-26&&m.x<st.x+26&&Math.abs(m.y-st.y)<52){
+          m.got=true;st.ammo+=3;st.big=true;
+          addScore(SCORE.l6mush);
+          toast('吃到蘑菇 +'+SCORE.l6mush+' 分，子弹 +3','gold');
+          burst(m.x);
+        }
+      });
+      // 金币：只加分，不出题
+      st.coins.forEach(c=>{
+        if(c.got)return;
+        if(Math.abs(c.x-st.x)<24&&Math.abs((groundY()-c.y)-(groundY()-st.y))<56){
+          c.got=true;addScore(SCORE.l6coin);st.ammo+=1;
+          const ammoEl=$('#l6ammo');if(ammoEl)ammoEl.textContent='🔫 子弹 '+st.ammo;
+          for(let i=0;i<4;i++)st.parts.push({x:c.x-camera(),y:groundY()-c.y,vx:(Math.random()-.5)*3,vy:-Math.random()*3,life:16,s:2,c:'#ffd166'});
+        }
+      });
+      // 捡枪
+      st.guns.forEach(gun=>{
+        if(!gun.got&&Math.abs(gun.x-st.x)<36){
+          gun.got=true;st.ammo+=5;st.hasGun=true;
+          toast('拾取 🔫 干扰枪，子弹 +5（按 J 或点「开枪」发射）','gold');
+        }
+      });
+      // 怪兽巡逻
+      st.monsters.forEach(m=>{
+        if(!m.alive)return;
+        m.x=m.base+Math.sin(st.time/900+m.base)*55;
+        if(m.hitCd>0)m.hitCd-=dt;
+        if(m.hitCd<=0&&st.inv<=0&&Math.abs(m.x-st.x)<34&&st.y<64){monsterHit(m);}
+      });
+      // 子弹
+      st.bullets=st.bullets.filter(b=>b.life>0);
+      st.bullets.forEach(b=>{
+        b.x+=900*dt/1000;b.life-=dt;
+        st.monsters.forEach(m=>{
+          if(m.alive&&Math.abs(m.x-b.x)<34){
+            m.alive=false;b.life=-1;addScore(SCORE.l6hit);
+            toast('✦ 击倒干扰兽 +'+SCORE.l6hit+' 分','good');
+            burst(m.x);
+          }
+        });
+      });
+      // 障碍
+      st.obs.forEach(o=>{
+        if(!o.done&&!o.near&&Math.abs(o.x-st.x)<36){o.near=true;o.shake=8;hit(o);}
+      });
+      // Boss
+      if(!st.boss.near&&st.x>st.boss.x-40){st.boss.near=true;bossQuiz();}
+      // HUD
+      fillEl.style.width=Math.min(100,st.x/(st.boss.x))*100+'%';
+      cpEl.textContent=st.obs.filter(o=>o.done).length;
+      const ammoEl=$('#l6ammo');if(ammoEl)ammoEl.textContent='🔫 子弹 '+st.ammo;
+    }
+    // 绘制
+    drawSky();drawHills();
+    drawFinish();
+    drawPlats();
+    st.obs.forEach(drawObs);
+    drawBoss();drawGuns();drawCoins();drawMushrooms();drawMonsters();drawBullets();
+    drawGround();
+    drawHero();
+    drawParts();
+    // 按键提示
+    g.textAlign='left';
+    g.fillStyle='rgba(6,18,32,.55)';g.fillRect(14,14,326,88);
+    g.strokeStyle='rgba(53,224,209,.32)';g.strokeRect(14,14,326,88);
+    g.fillStyle='#8fd8ff';g.font='bold 14px sans-serif';
+    g.fillText('操作：←/A 后退   →/D 前进',26,38);
+    g.fillText('空格 跳（连跳 3 次）  J 开枪',26,60);
+    g.fillStyle='#ffd166';
+    g.fillText('松手就停 · 吃金币 +子弹 · 顶问号出蘑菇',26,84);
+    if(paused){raf=0;}else{raf=requestAnimationFrame(frame);}
+  }
+  function resume(){last=0;if(running){cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);}}
+
+  /* ---------- 答题 ---------- */
+  function updateLife(){
+    const el=$('#l6life');
+    if(el)el.textContent='❤'.repeat(Math.max(0,st.lives))+'♡'.repeat(Math.max(0,3-st.lives));
+  }
+  function loseLife(){
+    st.lives--;updateLife();
+    if(st.lives<=0){
+      st.over=true;running=false;cancelAnimationFrame(raf);
+      setTimeout(()=>{closeModal();autoAdvance('lv6','生命耗尽，第 6 关结束，本关成绩已记录');},300);
+      return true;
+    }
+    return false;
+  }
+  function hit(o){
+    hitQuiz(o.q,'🚧 障碍 · '+TYPE[o.type].label,'第 6 关 · 综合障碍',right=>{
+      o.done=true;
+      if(right){burst(o.x);}
+      else{o.shake=10;st.inv=1500;}
+    });
+  }
+  function monsterHit(m){
+    m.alive=false;burst(m.x);
+    hitQuiz(m.q,'👾 干扰兽拦路','第 6 关 · 干扰兽',right=>{
+      if(!right){st.x=Math.max(20,st.x-110);st.inv=1600;}
+    });
+  }
+  function hitQuiz(q,title,src,after){
+    if(st.over)return;
+    paused=true;
+    const box=openModal({title:title,closable:false});
+    const body=$('.mbody',box);
+    let picked=[],locked=false;
+    function build(){
+      body.innerHTML='<div class="qtext">'+q.q+'</div>';
+      picked=[];locked=false;
+      const {wrap}=buildOptions(q,sel=>{picked=sel;});
+      body.appendChild(wrap);
+      const fb=document.createElement('div');body.appendChild(fb);
+      const act=document.createElement('div');act.className='mactions';body.appendChild(act);
+      const hint=document.createElement('p');hint.className='note';hint.style.marginTop='8px';
+      hint.textContent='💡 '+(q.hint||'先判断任务最硬的约束：分辨率、重访、还是全天候。');
+      body.appendChild(hint);
+      const sub=document.createElement('button');sub.className='btn primary';
+      sub.textContent=q.a.length>1?'提交方案（共 '+q.a.length+' 项）':'提交方案';
+      sub.onclick=()=>{
+        if(locked||!picked.length)return;locked=true;
+        const right=picked.length===q.a.length&&picked.every(v=>q.a.includes(v));
+        markOptions(wrap,q.a,picked);
+        $$('.opt',wrap).forEach(x=>x.onclick=null);
+        sub.remove();
+        fb.innerHTML=feedbackHTML(q,right)+
+          '<div class="explain '+(right?'':'bad')+'" style="margin-top:8px">'+(right?'+'+SCORE.l6hit+' 分':'−'+Math.abs(SCORE.l6bad)+' 分，生命 −1')+'</div>';
+        if(right){
+          addScore(SCORE.l6hit);
+        }else{
+          pushWrong(q,src);addScore(SCORE.l6bad);
+        }
+        if(after)after(right);
+        const b=document.createElement('button');b.className='btn primary';
+        b.textContent=right?'继续前进':'继续（已扣分）';
+        b.onclick=()=>{
+          closeModal();paused=false;resume();
+          if(!right)loseLife();
+        };
+        act.appendChild(b);
+      };
+      act.appendChild(sub);
+    }
+    build();
+  }
+  function burst(x){
+    for(let i=0;i<18;i++){
+      st.parts.push({x:x-camera(),y:groundY()-60,vx:(Math.random()-.5)*7,vy:-Math.random()*7,life:28,s:3+Math.random()*4,c:['#ffd166','#35e0d1','#ff8a65'][rnd(3)]});
+    }
+  }
+  function bossQuiz(){
+    paused=true;
+    const box=openModal({title:'🏛 终点 Boss 闸门 · 平天湖综合方案',closable:false});
+    const body=$('.mbody',box);
+    let step=0,picked=[],locked=false;
+    function build(){
+      const q=L6_BOSS.qs[step];
+      picked=[];locked=false;
+      body.innerHTML='<div class="note" style="margin-bottom:10px">'+L6_BOSS.intro+'</div>'+
+        '<div class="qtext" style="font-size:15px"><span style="color:#35e0d1">第 '+(step+1)+' / 3 问</span>　'+q.q+'</div>';
+      const {wrap}=buildOptions(q,sel=>{picked=sel;});
+      body.appendChild(wrap);
+      const fb=document.createElement('div');body.appendChild(fb);
+      const act=document.createElement('div');act.className='mactions';body.appendChild(act);
+      const sub=document.createElement('button');sub.className='btn primary';sub.textContent='提交本问';
+      sub.onclick=()=>{
+        if(locked)return;
+        if(!picked.length){toast('先选一个方案','bad');return;}
+        locked=true;
+        const ok=picked.length===q.a.length&&picked.every(v=>q.a.includes(v));
+        markOptions(wrap,q.a,picked);
+        $$('.opt',wrap).forEach(x=>x.onclick=null);
+        fb.innerHTML=feedbackHTML(q,ok);
+        sub.remove();
+        if(ok){
+          addScore(SCORE.boss);
+          const b=document.createElement('button');b.className='btn primary';
+          b.textContent = step<2 ? '下一问 ▸' : '打开闸门 · 通关';
+          b.onclick=()=>{
+            if(step<2){step++;build();}else{closeMoDalSafe();victory();}
+          };
+          act.appendChild(b);
+        }else{
+          pushWrong(q,'第 6 关 · 通关问答');
+          addScore(SCORE.l6bad);
+          toast('Boss 问答题答错 −'+Math.abs(SCORE.l6bad)+' 分','bad');
+          const b=document.createElement('button');b.className='btn';b.textContent='再答一次';
+          b.onclick=build;act.appendChild(b);
+        }
+      };
+      act.appendChild(sub);
+      box.scrollTop=0;
+    }
+    build();
+  }
+  function closeMoDalSafe(){closeModal();}
+  function victory(){
+    st.boss.done=true;running=false;cancelAnimationFrame(raf);
+    addScore(SCORE.l6clear);
+    const rec=completeLevel('lv6',5);
+    openModal({
+      title:'🏆 全部通关 · 国家级对地观测总调度',
+      html:'<div style="text-align:center;font-size:52px">🛰️🏛️</div>'+
+        '<p style="text-align:center;font-size:20px;font-weight:800;margin-top:8px">恭喜，你已成为国家级对地观测总调度</p>'+
+        '<p style="text-align:center;margin-top:6px">本关得分 <b style="color:#ffd166">'+(rec?rec.score:0)+'</b> 分，累计总分 <b style="color:#ffd166">'+S.total+'</b> 分</p>'+
+        '<p class="note" style="margin-top:12px;line-height:1.9">你走完了从“认星”到“出方案”的完整链路：知道一颗星长什么样、分辨率在哪一档、为什么重访是这么多天、每个波段能看什么，最后能针对一片湖、一座城、一条流域组合出可执行的数据方案。</p>'+
+        '<p class="note" style="margin-top:8px">下一站：把自己的方案写成一份 2 页的技术设计书，交给老师点评。</p>',
+      actions:[{label:'回到首页',cls:'primary',onClick:()=>{closeModal();goHome();}},{label:'再闯一次',onClick:()=>{closeModal();start();}}]
+    });
+  }
+
+  /* ---------- 选择角色 ---------- */
+  function renderHeroes(){
+    heroList.innerHTML='';
+    HEROES.forEach((h,i)=>{
+      const d=document.createElement('div');d.className='carbox herobox'+(i===0?' sel':'');
+      const ca=document.createElement('canvas');ca.width=200;ca.height=200;
+      const t=document.createElement('div');t.className='cn';t.textContent=h.n;
+      const s=document.createElement('div');s.className='cd';s.textContent=h.d;
+      d.appendChild(ca);d.appendChild(t);d.appendChild(s);
+      d.onclick=()=>{$$('.carbox',heroList).forEach(x=>x.classList.remove('sel'));d.classList.add('sel');st.hero=i;};
+      heroList.appendChild(d);
+      requestAnimationFrame(()=>drawPortrait(ca,h));
+    });
+    const go=document.createElement('button');go.className='btn primary';go.textContent='开始闯关 ▸';
+    go.style.flexBasis='100%';go.style.maxWidth='360px';go.style.margin='6px auto 0';
+    go.onclick=()=>{
+      heroPane.style.display='none';
+      paused=false;
+      if(!running){running=true;}
+      resume();
+    };
+    heroList.appendChild(go);
+  }
+  function drawPortrait(canvas,h){
+    const c=canvas.getContext('2d');
+    c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,200,200);
+    c.save();c.translate(100,176);c.scale(2.2,2.2);
+    c.fillStyle='rgba(0,0,0,.32)';c.beginPath();c.ellipse(0,2,15,4,0,0,7);c.fill();
+    c.fillStyle='#2a1c14';c.fillRect(-11,-8,10,8);c.fillRect(1,-8,10,8);
+    c.fillStyle=h.over;c.beginPath();c.roundRect(-11,-28,22,22,5);c.fill();
+    c.fillStyle=h.shirt;c.fillRect(-14,-30,7,13);c.fillRect(7,-30,7,13);
+    c.fillStyle=h.skin;c.beginPath();c.arc(-11,-17,4,0,7);c.fill();c.beginPath();c.arc(11,-17,4,0,7);c.fill();
+    c.fillStyle=h.over;c.fillRect(-8,-32,3,6);c.fillRect(5,-32,3,6);
+    c.fillStyle=h.skin;c.beginPath();c.arc(0,-40,10,0,7);c.fill();
+    c.fillStyle=h.hair;c.beginPath();c.arc(-2,-44,9,Math.PI,Math.PI*2);c.fill();
+    c.fillStyle='#ffb496';c.beginPath();c.arc(8,-39,4,0,7);c.fill();
+    c.fillStyle='#1b1b1b';c.beginPath();c.arc(4,-43,1.8,0,7);c.fill();
+    c.fillStyle=h.hair;c.beginPath();c.roundRect(-2,-35,12,4,2);c.fill();
+    c.fillStyle=h.cap;c.beginPath();c.arc(0,-47,10,Math.PI,0);c.fill();c.fillRect(0,-48,14,3);
+    c.fillStyle='#fff';c.beginPath();c.arc(0,-51,3,0,7);c.fill();
+    c.fillStyle=h.cap;c.beginPath();c.arc(0,-51,2,0,7);c.fill();
+    c.restore();
+  }
+
+  /* ---------- 道具 ---------- */
+  const MANUAL6='<table class="manualtable"><thead><tr><th>任务特征</th><th>组合思路</th></tr></thead><tbody>'+
+    '<tr><td>高频 + 细节</td><td>静止/水色星 + 10 m 多光谱</td></tr>'+
+    '<tr><td>晴空细节 + 阴雨应急</td><td>亚米光学 + C 波段 SAR</td></tr>'+
+    '<tr><td>长时序 + 近期</td><td>Landsat 系列 + 商业亚米</td></tr>'+
+    '<tr><td>形变 + 解译</td><td>L-SAR InSAR + 亚米光学</td></tr>'+
+    '<tr><td>热 + 光</td><td>SDGSAT-1 热红外 + 微光</td></tr>'+
+    '<tr><td>宽幅普查</td><td>GF-1 WFV 800 km</td></tr>'+
+    '</tbody></table>';
+  manualBtn.onclick=()=>{
+    if(!st||st.over||st.boss.done||st.finished)return;
+    paused=true;
+    const ok=manualSheet('lv6',MANUAL6,()=>{if(st&&!st.over&&!st.boss.done){paused=false;last=0;resume();}});
+    if(!ok)paused=false;
+  };
+  hintBtn.onclick=()=>{
+    if(!st||st.over)return;
+    if(!st.hints){toast('提示卡用完了','bad');return;}
+    st.hints--;hintBtn.textContent='💡 提示 ×'+st.hints;
+    if(st.hints<=0)hintBtn.disabled=true;
+    const next=st.obs.find(o=>!o.done);
+    toast('💡 '+(next?next.q.hint:'Boss 关按“高频、细节、全天候”三段拆'),'gold');
+  };
+
+  function start(){
+    fit();
+    startRun('lv6');
+    st=newState();
+    st.coins=coinField();
+    paused=true;running=false;cancelAnimationFrame(raf);
+    heroPane.style.display='flex';
+    MAN.lv6=2;refreshManualBtns();
+    hintBtn.disabled=false;hintBtn.textContent='💡 提示 ×1';
+    cpEl.textContent='0';fillEl.style.width='0%';updateLife();
+    const ammoEl=$('#l6ammo');if(ammoEl)ammoEl.textContent='🔫 子弹 0';
+    renderHeroes();
+  }
+  function stop(){running=false;cancelAnimationFrame(raf);}
+
+  /* ---------- 跳跃 / 开枪 ---------- */
+  function doJump(){
+    if(!running||paused||!st||st.over||st.boss.done)return;
+    if(st.onGround){st.vy=380;st.onGround=false;st.jumps=1;}
+    else if(st.jumps<3){st.vy=st.jumps===1?350:325;st.jumps++;}
+  }
+  function doShoot(){
+    if(!running||paused||!st||st.over||st.boss.done)return;
+    if(st.ammo<=0){toast('没有子弹：先去捡地上的 🔫','bad');return;}
+    st.ammo--;st.shots++;st.flashT=110;
+    st.bullets.push({x:st.x+18,y:46,life:1500});
+    const ammoEl=$('#l6ammo');if(ammoEl)ammoEl.textContent='🔫 子弹 '+st.ammo;
+  }
+  window.addEventListener('keydown',e=>{
+    if(currentLevel!=='lv6')return;
+    if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){e.preventDefault();doJump();}
+    if(e.code==='KeyJ'||e.code==='KeyK'||e.code==='KeyX'){e.preventDefault();doShoot();}
+    if(e.code==='ArrowLeft'||e.code==='KeyA'){e.preventDefault();if(st)st.left=true;}
+    if(e.code==='ArrowRight'||e.code==='KeyD'){e.preventDefault();if(st)st.right=true;}
+  });
+  window.addEventListener('keyup',e=>{
+    if(!st)return;
+    if(e.code==='ArrowLeft'||e.code==='KeyA')st.left=false;
+    if(e.code==='ArrowRight'||e.code==='KeyD')st.right=false;
+  });
+  const jumpBtn=$('#l6jump'), shootBtn=$('#l6shoot');
+  const leftBtn=$('#l6left'), rightBtn=$('#l6right');
+  const hold=(el,on,off)=>{
+    if(!el)return;
+    el.addEventListener('pointerdown',e=>{e.preventDefault();on();});
+    ['pointerup','pointerleave','pointercancel'].forEach(t=>el.addEventListener(t,()=>off()));
+  };
+  hold(leftBtn,()=>{if(st){st.left=true;}},()=>{if(st)st.left=false;});
+  hold(rightBtn,()=>{if(st){st.right=true;}},()=>{if(st)st.right=false;});
+  if(jumpBtn){jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();doJump();});}
+  if(shootBtn){shootBtn.addEventListener('pointerdown',e=>{e.preventDefault();doShoot();});}
+  cv.addEventListener('pointerdown',()=>doJump());
+  window.addEventListener('resize',()=>{if(currentLevel==='lv6')fit();});
+  return {start,stop,state:()=>st};
+})();
+window.L6=L6;
+
+/* ============================================================
+   启动
+   ============================================================ */
+window.addEventListener('error',e=>{
+  if(window.__errShown)return;window.__errShown=1;
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;left:12px;bottom:12px;z-index:200;max-width:80vw;padding:10px 14px;border-radius:10px;background:rgba(120,20,20,.95);color:#ffd7d7;font-size:12px;line-height:1.5;border:1px solid #ff6b6b';
+  t.textContent='页面脚本异常：'+(e.message||'未知错误')+'（可刷新重试）';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),6000);
+});
+
+renderHome();
+S.plays=(S.plays||0)+1;save();
+
+function welcome(){
+  openModal({
+    title:'🛰 欢迎来到「轨道课堂 · 遥感卫星闯关」',
+    html:'<p>六关，从<b>认星</b>一路走到<b>出方案</b>：</p>'+
+      '<p style="margin-top:8px;line-height:2">① 认星台 · 翻卡认卫星<br>② 分辨率分拣站 · 建立量级直觉<br>③ 轨道与重访 · 搞懂“为什么是这么多天”<br>④ 波段连连看 · 记住每个波段看什么<br>⑤ 赛车竞速 · 按任务选数据源<br>⑥ 马里奥闯关 · 交出综合方案</p>'+
+      '<p class="note" style="margin-top:10px">题库每局随机抽取，答错进复习舱；进度自动保存在本机浏览器。</p>',
+    actions:[
+      {label:'先看卫星库',onClick:()=>{closeModal();openLibrary();}},
+      {label:'开始第 1 关',cls:'primary',onClick:()=>{closeModal();goLevel('lv1');}}
+    ]
+  });
+}
+
+let __jump='';
+try{__jump=(new URLSearchParams(location.search).get('lv')||'');}catch(e){}
+
+setTimeout(()=>{
+  if(/^[1-6]$/.test(__jump)){
+    closeModal();goLevel('lv'+__jump);
+    return;
+  }
+  if(S.wrong.length){startReview();}
+  else if(S.plays<=1){welcome();}
+},700);
+</script>
+</body>
+</html>
